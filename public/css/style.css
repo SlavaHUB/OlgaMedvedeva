@@ -171,58 +171,47 @@ body.admin-mode .admin-only { display: block; }
 .input-with-select select { background: #FDE68A; border: none; border-left: 1px solid #D97706; padding: 0 10px; font-family: var(--font-body); font-weight: 600; color: var(--color-primary); outline: none; cursor: pointer; }
 
 /* ========================================== */
-/* БЛОК 6: МОДАЛЬНЫЕ ОКНА И КЕЙСЫ (ИСПРАВЛЕННЫЙ) */
+/* БЛОК 6: МОДАЛЬНЫЕ ОКНА И КЕЙСЫ (ФИНАЛ)     */
 /* ========================================== */
 .modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.65); backdrop-filter: blur(6px); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; pointer-events: none; transition: opacity 0.25s ease; padding: 20px; }
 .modal-backdrop.active { opacity: 1; pointer-events: all; }
+
+/* 1. Делаем окно шире (1200px - по ширине сайта) */
 .modal-window { background: var(--color-surface); width: 100%; max-width: 440px; border-radius: var(--radius-md); box-shadow: var(--shadow-modal); overflow: hidden; transform: scale(0.95); transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); max-height: 90vh; display: flex; flex-direction: column; }
 .modal-backdrop.active .modal-window { transform: scale(1); }
+.modal-window.large-modal { max-width: 1200px; }
 
-.modal-window.large-modal { max-width: 1000px; }
-/* ФИКС СКРОЛЛА: добавлен min-height: 0 */
-.modal-window.large-modal .modal-body { overflow-y: auto; padding: 0; min-height: 0; }
+/* 2. Возвращаем отступы внутри модалки (чтобы фото не липло к краям) */
+.modal-window.large-modal .modal-body { overflow-y: auto; padding: 32px; min-height: 0; }
 
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
-.modal-header h3 { font-family: var(--font-heading); font-size: 1.5rem; color: var(--color-primary); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 32px; border-bottom: 1px solid var(--color-border); flex-shrink: 0; }
+.modal-header h3 { font-family: var(--font-heading); font-size: 1.6rem; color: var(--color-primary); }
 .modal-close { background: none; border: none; font-size: 1.8rem; cursor: pointer; color: var(--color-text-muted); }
-.modal-body { padding: 24px; font-size: 0.95rem; color: var(--color-text-main); flex-grow: 1; }
-.modal-footer { padding: 16px 24px; background: var(--color-bg); display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--color-border); flex-shrink: 0; }
+.modal-footer { padding: 16px 32px; background: var(--color-bg); display: flex; justify-content: flex-end; gap: 12px; border-top: 1px solid var(--color-border); flex-shrink: 0; }
 
-.project-case-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
-/* ФИКС ВЕРСТКИ ГАЛЕРЕИ: убран серый фон, добавлен align-self и min-width */
-.case-media { display: flex; flex-direction: column; min-width: 0; align-self: flex-start; }
-.case-main-image { width: 100%; height: 420px; object-fit: cover; display: block; background: #E5E7EB; }
-.case-gallery { display: flex; gap: 8px; padding: 16px; overflow-x: auto; background: #f9fafb; }
-.gallery-thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; opacity: 0.7; transition: var(--transition); border: 2px solid transparent; }
+/* Добавляем зазор между фото и текстом */
+.project-case-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; }
+.case-media { display: flex; flex-direction: column; min-width: 0; align-self: flex-start; gap: 16px; }
+
+/* Делаем главное фото аккуратным с легким скруглением */
+.case-main-image { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; display: block; background: #E5E7EB; border-radius: var(--radius-sm); }
+
+/* 3. Убираем скролл, делаем галерею плиткой (перенос строк) */
+.case-gallery { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; background: transparent; }
+/* Миниатюры автоматически занимают 20% ширины (по 5 штук в ряд) */
+.gallery-thumb { width: calc(20% - 8px); aspect-ratio: 4/3; object-fit: cover; border-radius: 6px; cursor: pointer; opacity: 0.6; transition: var(--transition); border: 2px solid transparent; }
 .gallery-thumb:hover { opacity: 1; border-color: var(--color-accent); transform: translateY(-2px); }
 
-/* ДИЗАЙН СКРОЛЛБАРА В ГАЛЕРЕЕ */
-.case-gallery::-webkit-scrollbar { height: 6px; }
-.case-gallery::-webkit-scrollbar-track { background: #f9fafb; }
-.case-gallery::-webkit-scrollbar-thumb { background: var(--color-accent); border-radius: 10px; }
-.case-gallery::-webkit-scrollbar-thumb:hover { background: var(--color-accent-hover); }
-
-.case-info { padding: 32px; display: flex; flex-direction: column; gap: 24px; background: #fff; }
+.case-info { padding: 0; display: flex; flex-direction: column; gap: 24px; background: #fff; }
 .case-stats { display: flex; flex-wrap: wrap; gap: 12px; }
-.stat-badge { background: #f3f4f6; padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; color: var(--color-primary); border: 1px solid var(--color-border); }
-.case-section h4 { font-family: var(--font-heading); font-size: 1.2rem; color: var(--color-accent); margin-bottom: 8px; }
-.case-section p { font-size: 0.95rem; line-height: 1.6; color: var(--color-text-muted); }
-
-/* Тосты (Уведомления) */
-.toast-container { position: fixed; bottom: 24px; right: 24px; z-index: 1100; display: flex; flex-direction: column; gap: 10px; }
-.toast { background: var(--color-primary); color: #FFFFFF; padding: 14px 20px; border-radius: var(--radius-sm); box-shadow: var(--shadow-soft); font-size: 0.9rem; display: flex; align-items: center; gap: 10px; animation: toastIn 0.3s ease forwards; }
-.toast.success { border-left: 4px solid #10B981; }
-.toast.error { border-left: 4px solid #EF4444; }
-@keyframes toastIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.stat-badge { background: #f3f4f6; padding: 8px 16px; border-radius: 50px; font-size: 0.85rem; color: var(--color-primary); border: 1px solid var(--color-border); font-weight: 500; }
+.case-section h4 { font-family: var(--font-heading); font-size: 1.3rem; color: var(--color-accent); margin-bottom: 12px; }
+.case-section p { font-size: 0.95rem; line-height: 1.7; color: var(--color-text-muted); }
 
 /* Адаптив под мобильные телефоны */
 @media (max-width: 900px) {
-    .hero-container { grid-template-columns: 1fr; text-align: center; gap: 40px; }
-    .hero-actions { justify-content: center; }
-    .hero-media { order: -1; max-width: 400px; margin: 0 auto; }
-    .form-row { grid-template-columns: 1fr; }
-    .nav-menu { display: none; }
-    .project-case-layout { grid-template-columns: 1fr; } 
-    .case-main-image { max-height: 350px; }
-    .case-info { padding: 24px; }
+    .modal-window.large-modal .modal-body { padding: 20px; }
+    .modal-header { padding: 16px 20px; }
+    .project-case-layout { grid-template-columns: 1fr; gap: 24px; } 
+    .gallery-thumb { width: calc(25% - 8px); } /* На мобилках по 4 фото в ряд */
 }
