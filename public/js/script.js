@@ -4,6 +4,12 @@ let adminPassword = "";
 let isAdminLoggedIn = false;
 
 const modalBackdrop = document.getElementById('modalBackdrop');
+modalBackdrop.addEventListener('click', function (event) {
+    // Проверяем, что клик был именно по фону, а не внутри самой белой карточки
+    if (event.target === modalBackdrop) {
+        closeModal();
+    }
+});
 const modalWindowBox = document.getElementById('modalWindowBox');
 const modalTitle = document.getElementById('modalTitle');
 const modalBody = document.getElementById('modalBody');
