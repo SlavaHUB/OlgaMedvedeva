@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,8 +8,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <!-- Добавлен шрифт Caveat для рукописного логотипа -->
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-    <style> body { opacity: 0; transition: opacity 0.4s ease; } </style>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+    </style>
     <script>
         (function () {
             const link = document.createElement('link');
@@ -19,6 +27,7 @@
         })();
     </script>
 </head>
+
 <body>
 
     <!-- ========================================== -->
@@ -43,11 +52,15 @@
             <div class="hero-content">
                 <span class="badge">Дизайн интерьеров & Согласование</span>
                 <h1>Давайте знакомиться! 👋</h1>
-                <p class="hero-lead">Меня зовут <strong>Ольга Медведева</strong>, и я создаю интерьеры, в которые хочется возвращаться.</p>
-                <p class="hero-desc">Уже 3 года я увлеченно занимаюсь дизайном интерьеров, а также являюсь экспертом по согласованию перепланировок. Для меня красота и комфорт начинаются с грамотной и законной планировки!</p>
+                <p class="hero-lead">Меня зовут <strong>Ольга Медведева</strong>, и я создаю интерьеры, в которые
+                    хочется возвращаться.</p>
+                <p class="hero-desc">Уже 3 года я увлеченно занимаюсь дизайном интерьеров, а также являюсь экспертом по
+                    согласованию перепланировок. Для меня красота и комфорт начинаются с грамотной и законной
+                    планировки!</p>
                 <div class="hero-actions">
                     <a href="#contacts" class="btn btn-primary">Обсудить проект</a>
-                    <a href="https://disk.yandex.com.am/i/FSp4EzdTiBNlRw" target="_blank" class="btn btn-secondary">Коммерческое предложение</a>
+                    <a href="https://disk.yandex.com.am/i/FSp4EzdTiBNlRw" target="_blank"
+                        class="btn btn-secondary">Коммерческое предложение</a>
                 </div>
             </div>
             <div class="hero-media">
@@ -76,7 +89,8 @@
                 <div class="service-card highlight">
                     <div class="service-icon">📐</div>
                     <h3>Детальный дизайн-проект</h3>
-                    <p>3–5 вариантов планировки, полный пакет чертежей для строителей, 3D-визуализации и спецификации мебели.</p>
+                    <p>3–5 вариантов планировки, полный пакет чертежей для строителей, 3D-визуализации и спецификации
+                        мебели.</p>
                 </div>
                 <div class="service-card">
                     <div class="service-icon">💰</div>
@@ -86,7 +100,8 @@
                 <div class="service-card">
                     <div class="service-icon">🔍</div>
                     <h3>Авторское сопровождение</h3>
-                    <p>Контролирую строительные работы на всех этапах, чтобы интерьер на 100% соответствовал проекту.</p>
+                    <p>Контролирую строительные работы на всех этапах, чтобы интерьер на 100% соответствовал проекту.
+                    </p>
                 </div>
                 <div class="service-card">
                     <div class="service-icon">🤝</div>
@@ -117,10 +132,12 @@
                     <h4>Добавление нового проекта</h4>
                     <span class="admin-tag">Admin Mode</span>
                 </div>
-                
+
                 <div class="upload-type-toggle">
-                    <label><input type="radio" name="uploadType" value="url" checked onchange="toggleUploadMode()"> Вставить ссылку (1 фото)</label>
-                    <label><input type="radio" name="uploadType" value="file" onchange="toggleUploadMode()"> Загрузить галерею с ПК (до 10 фото)</label>
+                    <label><input type="radio" name="uploadType" value="url" checked onchange="toggleUploadMode()">
+                        Вставить ссылку (1 фото)</label>
+                    <label><input type="radio" name="uploadType" value="file" onchange="toggleUploadMode()"> Загрузить
+                        галерею с ПК (до 10 фото)</label>
                 </div>
 
                 <div class="admin-grid-inputs">
@@ -128,32 +145,50 @@
                         <input type="url" id="workMainImageInput" placeholder="URL главного фото">
                     </div>
                     <div id="fileInputGroup" style="display: none;">
-                        <input type="file" id="workFileInput" accept="image/png, image/jpeg, image/webp" multiple style="background: #fff; padding: 9px; width: 100%;">
-                        <small style="color: #888; display: block; margin-top: 4px;">Первое фото станет обложкой. Картинки будут сжаты автоматически!</small>
+                        <input type="file" id="workFileInput" accept="image/png, image/jpeg, image/webp" multiple
+                            style="background: #fff; padding: 9px; width: 100%;">
+                        <small style="color: #888; display: block; margin-top: 4px;">Первое фото станет обложкой.
+                            Картинки будут сжаты автоматически!</small>
                     </div>
-                    
-                    <input type="text" id="workTitleInput" placeholder="Название проекта (Напр. Квартира в ЖК Минск-Мир)">
-                    
+
+                    <input type="text" id="workTitleInput"
+                        placeholder="Название проекта (Напр. Квартира в ЖК Минск-Мир)">
+
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
                         <div class="input-with-select">
-                            <input type="number" id="workAreaInput" placeholder="Площадь">
-                            <select id="workAreaUnit"><option value="м²">м²</option><option value="кв.м.">кв.м.</option></select>
+                            <input type="text" id="workAreaInput" placeholder="Площадь">
+                            <select id="workAreaUnit">
+                                <option value="м²">м²</option>
+                                <option value="кв.м.">кв.м.</option>
+                            </select>
                         </div>
                         <div class="input-with-select">
-                            <input type="number" id="workDurationInput" placeholder="Сроки">
-                            <select id="workDurationUnit"><option value="мес.">мес.</option><option value="нед.">нед.</option><option value="дн.">дн.</option></select>
+                            <input type="text" id="workDurationInput" placeholder="Сроки">
+                            <select id="workDurationUnit">
+                                <option value="мес.">мес.</option>
+                                <option value="нед.">нед.</option>
+                                <option value="дн.">дн.</option>
+                            </select>
                         </div>
                         <div class="input-with-select">
-                            <input type="number" id="workBudgetInput" placeholder="Бюджет">
-                            <select id="workBudgetUnit"><option value="₽">₽</option><option value="BYN">BYN</option><option value="$">$</option><option value="€">€</option></select>
+                            <input type="text" id="workBudgetInput" placeholder="Бюджет">
+                            <select id="workBudgetUnit">
+                                <option value="₽">₽</option>
+                                <option value="BYN">BYN</option>
+                                <option value="$">$</option>
+                                <option value="€">€</option>
+                            </select>
                         </div>
                     </div>
-                    
-                    <textarea id="workTaskInput" rows="2" placeholder="Какая задача стояла (Запросы клиента)"></textarea>
-                    <textarea id="workSolutionInput" rows="3" placeholder="Наше решение (Перепланировка, стилистика, фишки)"></textarea>
+
+                    <textarea id="workTaskInput" rows="2"
+                        placeholder="Какая задача стояла (Запросы клиента)"></textarea>
+                    <textarea id="workSolutionInput" rows="3"
+                        placeholder="Наше решение (Перепланировка, стилистика, фишки)"></textarea>
                 </div>
-                
-                <button class="btn btn-primary btn-block" style="margin-top: 16px;" id="uploadWorkBtn" onclick="handleAddWork()">Опубликовать проект</button>
+
+                <button class="btn btn-primary btn-block" style="margin-top: 16px;" id="uploadWorkBtn"
+                    onclick="handleAddWork()">Опубликовать проект</button>
             </div>
 
             <div class="portfolio-grid" id="portfolioGrid"></div>
@@ -170,7 +205,7 @@
                 <p>Впечатления тех, кто уже доверил мне свой уют</p>
             </div>
             <div class="reviews-grid" id="reviewsGrid"></div>
-            
+
             <div class="review-form-wrapper">
                 <h3>Оставить свой отзыв</h3>
                 <form id="reviewForm" novalidate>
@@ -181,13 +216,15 @@
                         </div>
                         <div class="form-group">
                             <label for="revContact">Email или номер телефона *</label>
-                            <input type="text" id="revContact" placeholder="+7 (999) 000-00-00 или mail@domain.com" required>
+                            <input type="text" id="revContact" placeholder="+7 (999) 000-00-00 или mail@domain.com"
+                                required>
                             <span class="error-text" id="contactError">Укажите корректный телефон или email</span>
                         </div>
                     </div>
                     <div class="form-group">
                         <label for="revText">Ваш отзыв *</label>
-                        <textarea id="revText" rows="4" placeholder="Расскажите о впечатлениях от работы над проектом..." required></textarea>
+                        <textarea id="revText" rows="4"
+                            placeholder="Расскажите о впечатлениях от работы над проектом..." required></textarea>
                     </div>
                     <button type="submit" class="btn btn-primary btn-block">Опубликовать отзыв</button>
                 </form>
@@ -204,9 +241,12 @@
                 <h2>Создадим дом вашей мечты вместе 🏡</h2>
                 <p>Всегда открыта для новых проектов и консультаций по перепланировке</p>
                 <div class="contact-buttons">
-                    <a href="https://t.me/Medvedeva_designer" target="_blank" class="contact-pill"><span>✏️</span> Написать в Telegram</a>
-                    <a href="https://t.me/medvedevapropereplan" target="_blank" class="contact-pill"><span>📢</span> Канал о перепланировках</a>
-                    <a href="https://disk.yandex.com.am/i/FSp4EzdTiBNlRw" target="_blank" class="contact-pill"><span>📄</span> Коммерческое предложение</a>
+                    <a href="https://t.me/Medvedeva_designer" target="_blank" class="contact-pill"><span>✏️</span>
+                        Написать в Telegram</a>
+                    <a href="https://t.me/medvedevapropereplan" target="_blank" class="contact-pill"><span>📢</span>
+                        Канал о перепланировках</a>
+                    <a href="https://disk.yandex.com.am/i/FSp4EzdTiBNlRw" target="_blank"
+                        class="contact-pill"><span>📄</span> Коммерческое предложение</a>
                     <a href="tel:+79166145812" class="contact-pill"><span>☎️</span> +7 (916) 614-58-12</a>
                 </div>
             </div>
@@ -232,14 +272,15 @@
     <script>
         (function () {
             const version = Date.now();
-            const scripts = ['js/script.js']; 
+            const scripts = ['js/script.js'];
             scripts.forEach(function (file) {
                 const script = document.createElement('script');
                 script.src = file + '?v=' + version;
-                script.async = false; 
+                script.async = false;
                 document.body.appendChild(script);
             });
         })();
     </script>
 </body>
+
 </html>
