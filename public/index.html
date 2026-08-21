@@ -4,15 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ольга Медведева | Дизайн интерьеров и согласование перепланировок</title>
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
-
-    <style>
-        body { opacity: 0; transition: opacity 0.4s ease; }
-    </style>
-
+    <style> body { opacity: 0; transition: opacity 0.4s ease; } </style>
     <script>
         (function () {
             const link = document.createElement('link');
@@ -73,17 +68,17 @@
                 <div class="service-card highlight">
                     <div class="service-icon">📐</div>
                     <h3>Детальный дизайн-проект</h3>
-                    <p>3–5 вариантов планировки, полный пакет чертежей для строителей, фотореалистичные 3D-визуализации и спецификации мебели.</p>
+                    <p>3–5 вариантов планировки, полный пакет чертежей для строителей, 3D-визуализации и спецификации мебели.</p>
                 </div>
                 <div class="service-card">
                     <div class="service-icon">💰</div>
                     <h3>Бюджет и комплектация</h3>
-                    <p>Работаю строго в рамках утвержденного бюджета. Помогу с закупками всех материалов и предметов интерьера.</p>
+                    <p>Работаю строго в рамках утвержденного бюджета. Помогу с закупками материалов и мебели.</p>
                 </div>
                 <div class="service-card">
                     <div class="service-icon">🔍</div>
                     <h3>Авторское сопровождение</h3>
-                    <p>Контролирую строительные работы на всех этапах, чтобы готовый интерьер на 100% соответствовал проекту.</p>
+                    <p>Контролирую строительные работы на всех этапах, чтобы интерьер на 100% соответствовал проекту.</p>
                 </div>
                 <div class="service-card">
                     <div class="service-icon">🤝</div>
@@ -103,31 +98,46 @@
         <div class="container">
             <div class="section-title">
                 <h2>Авторские проекты</h2>
-                <p>Галерея реализованных идей и визуализаций</p>
+                <p>Кликните на проект, чтобы рассмотреть детали и галерею</p>
             </div>
 
+            <!-- РАСШИРЕННАЯ АДМИН ПАНЕЛЬ -->
             <div class="admin-only admin-panel" id="adminPortfolioPanel">
                 <div class="admin-panel-header">
-                    <h4>Панель управления проектами</h4>
+                    <h4>Добавление нового Кейса</h4>
                     <span class="admin-tag">Admin Mode</span>
                 </div>
+                
                 <div class="upload-type-toggle">
-                    <label><input type="radio" name="uploadType" value="url" checked onchange="toggleUploadMode()"> Вставить ссылку</label>
-                    <label><input type="radio" name="uploadType" value="file" onchange="toggleUploadMode()"> Загрузить файл с ПК</label>
+                    <label><input type="radio" name="uploadType" value="url" checked onchange="toggleUploadMode()"> Вставить ссылку (1 фото)</label>
+                    <label><input type="radio" name="uploadType" value="file" onchange="toggleUploadMode()"> Загрузить галерею с ПК (до 10 фото)</label>
                 </div>
-                <div class="admin-input-group" id="urlInputGroup">
-                    <input type="url" id="workUrlInput" placeholder="Прямая ссылка на изображение (URL)">
+
+                <div class="admin-grid-inputs">
+                    <div id="urlInputGroup">
+                        <input type="url" id="workMainImageInput" placeholder="URL главного фото">
+                    </div>
+                    <div id="fileInputGroup" style="display: none;">
+                        <input type="file" id="workFileInput" accept="image/png, image/jpeg, image/webp" multiple style="background: #fff; padding: 9px; width: 100%;">
+                        <small style="color: #888;">Первое фото станет обложкой проекта</small>
+                    </div>
+                    
+                    <input type="text" id="workTitleInput" placeholder="Название проекта (Напр. Квартира в ЖК Минск-Мир)">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                        <input type="text" id="workAreaInput" placeholder="Площадь (напр. 75 м²)">
+                        <input type="text" id="workDurationInput" placeholder="Сроки (напр. 4 месяца)">
+                        <input type="text" id="workBudgetInput" placeholder="Бюджет (необязательно)">
+                    </div>
+                    
+                    <textarea id="workTaskInput" rows="2" placeholder="Какая задача стояла (Запросы клиента)"></textarea>
+                    <textarea id="workSolutionInput" rows="3" placeholder="Наше решение (Перепланировка, стилистика, фишки)"></textarea>
                 </div>
-                <div class="admin-input-group" id="fileInputGroup" style="display: none;">
-                    <input type="file" id="workFileInput" accept="image/png, image/jpeg, image/webp" style="background: #fff; padding: 9px;">
-                </div>
-                <div class="admin-input-group" style="margin-top: 12px;">
-                    <input type="text" id="workDescInput" placeholder="Краткое описание (например, 'Светлая спальня в ЖК Минск-Мир')">
-                </div>
-                <button class="btn btn-primary btn-block" style="margin-top: 16px;" id="uploadWorkBtn" onclick="handleAddWork()">Добавить в портфолио</button>
+                
+                <button class="btn btn-primary btn-block" style="margin-top: 16px;" id="uploadWorkBtn" onclick="handleAddWork()">Опубликовать проект</button>
             </div>
 
             <div class="portfolio-grid" id="portfolioGrid">
+                <!-- Карточки генерируются JS -->
             </div>
         </div>
     </section>
@@ -138,8 +148,8 @@
                 <h2>Отзывы клиентов</h2>
                 <p>Впечатления тех, кто уже доверил мне свой уют</p>
             </div>
-            <div class="reviews-grid" id="reviewsGrid">
-            </div>
+            <div class="reviews-grid" id="reviewsGrid"></div>
+            
             <div class="review-form-wrapper">
                 <h3>Оставить свой отзыв</h3>
                 <form id="reviewForm" novalidate>
@@ -182,16 +192,15 @@
         </div>
     </footer>
 
+    <!-- Улучшенное модальное окно (поддерживает широкий режим) -->
     <div class="modal-backdrop" id="modalBackdrop">
-        <div class="modal-window">
+        <div class="modal-window" id="modalWindowBox">
             <div class="modal-header">
                 <h3 id="modalTitle">Заголовок</h3>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div class="modal-body" id="modalBody">
-            </div>
-            <div class="modal-footer" id="modalFooter">
-            </div>
+            <div class="modal-body" id="modalBody"></div>
+            <div class="modal-footer" id="modalFooter"></div>
         </div>
     </div>
 

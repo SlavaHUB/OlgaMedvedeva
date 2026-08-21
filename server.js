@@ -10,23 +10,25 @@ const path = require('path');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// === НАСТРОЙКИ СЕРВЕРА ===
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// Указываем серверу раздавать статику из папки public
 app.use(express.static(path.join(__dirname, 'public'))); 
 
-// === ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ MONGODB ===
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ Успешное подключение к MongoDB Atlas'))
     .catch(err => console.error('❌ Ошибка подключения к БД:', err));
 
-// --- СХЕМЫ БАЗЫ ДАННЫХ ---
+// === НОВАЯ СХЕМА ПРОЕКТОВ (КЕЙСЫ) ===
 const workSchema = new mongoose.Schema({
-    url: { type: String, required: true },
-    desc: { type: String, default: '' },
+    title: { type: String, default: 'Дизайн-проект' },
+    mainImage: { type: String, required: true },
+    gallery: [{ type: String }], // Массив дополнительных фото
+    area: { type: String, default: '' },
+    duration: { type: String, default: '' },
+    budget: { type: String, default: '' },
+    task: { type: String, default: '' },
+    solution: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now }
 });
 const Work = mongoose.model('Work', workSchema);
@@ -39,7 +41,6 @@ const reviewSchema = new mongoose.Schema({
 });
 const Review = mongoose.model('Review', reviewSchema);
 
-// === НАСТРОЙКА CLOUDINARY (Для загрузки файлов) ===
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -56,18 +57,11 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-// === МАРШРУТЫ API (ENDPOINTS) ===
-
-// 1. Проверка пароля администратора
 app.post('/api/verify-password', (req, res) => {
-    if (req.body.password === process.env.ADMIN_PASSWORD) {
-        res.status(200).json({ success: true });
-    } else {
-        res.status(403).json({ error: 'Неверный пароль' });
-    }
+    if (req.body.password === process.env.ADMIN_PASSWORD) res.status(200).json({ success: true });
+    else res.status(403).json({ error: 'Неверный пароль' });
 });
 
-// 2. Получение портфолио
 app.get('/api/portfolio', async (req, res) => {
     try {
         const works = await Work.find().sort({ createdAt: -1 });
@@ -77,13 +71,15 @@ app.get('/api/portfolio', async (req, res) => {
     }
 });
 
-// 3. Добавление работы (ПО ССЫЛКЕ)
+// ДОБАВЛЕНИЕ ПО ССЫЛКЕ
 app.post('/api/portfolio/url', async (req, res) => {
     try {
-        const { url, desc, password } = req.body;
+        const { password, title, mainImage, area, duration, budget, task, solution } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
 
-        const newWork = new Work({ url, desc });
+        const newWork = new Work({ 
+            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution 
+        });
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
@@ -91,14 +87,19 @@ app.post('/api/portfolio/url', async (req, res) => {
     }
 });
 
-// 4. Добавление работы (ФАЙЛОМ)
-app.post('/api/portfolio/file', upload.single('image'), async (req, res) => {
+// ДОБАВЛЕНИЕ ФАЙЛАМИ (до 10 фото за раз)
+app.post('/api/portfolio/file', upload.array('images', 10), async (req, res) => {
     try {
-        const { desc, password } = req.body;
+        const { password, title, area, duration, budget, task, solution } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
-        if (!req.file) return res.status(400).json({ error: 'Файл не загружен' });
+        if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Файлы не загружены' });
 
-        const newWork = new Work({ url: req.file.path, desc }); 
+        const mainImage = req.files[0].path; // Первое фото - главное
+        const gallery = req.files.map(file => file.path); // Все фото - в галерею
+
+        const newWork = new Work({ 
+            title, mainImage, gallery, area, duration, budget, task, solution 
+        }); 
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
@@ -106,7 +107,6 @@ app.post('/api/portfolio/file', upload.single('image'), async (req, res) => {
     }
 });
 
-// 5. Удаление работы
 app.delete('/api/portfolio/:id', async (req, res) => {
     try {
         if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
@@ -117,7 +117,6 @@ app.delete('/api/portfolio/:id', async (req, res) => {
     }
 });
 
-// 6. Получение отзывов
 app.get('/api/reviews', async (req, res) => {
     try {
         const reviews = await Review.find({}, 'name text createdAt').sort({ createdAt: -1 });
@@ -127,22 +126,18 @@ app.get('/api/reviews', async (req, res) => {
     }
 });
 
-// 7. Добавление отзыва
 app.post('/api/reviews', async (req, res) => {
     try {
         const { name, contact, text } = req.body;
         if (!name || !contact || !text) return res.status(400).json({ error: 'Заполните все поля' });
-
         const newReview = new Review({ name, contact, text });
         await newReview.save();
-        
         res.status(201).json({ _id: newReview._id, name: newReview.name, text: newReview.text });
     } catch (error) {
         res.status(500).json({ error: 'Ошибка сохранения отзыва' });
     }
 });
 
-// 8. Удаление отзыва
 app.delete('/api/reviews/:id', async (req, res) => {
     try {
         if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
@@ -153,12 +148,10 @@ app.delete('/api/reviews/:id', async (req, res) => {
     }
 });
 
-// УНИВЕРСАЛЬНЫЙ CATCH-ALL (Исправлено для Express 5)
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// === ЗАПУСК СЕРВЕРА ===
 app.listen(PORT, () => {
     console.log(`🚀 Сервер запущен на порту ${PORT}`);
 });
