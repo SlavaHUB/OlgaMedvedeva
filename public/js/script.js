@@ -9,7 +9,6 @@ const modalTitle = document.getElementById('modalTitle');
 const modalBody = document.getElementById('modalBody');
 const modalFooter = document.getElementById('modalFooter');
 
-// Теперь модалка умеет быть "широкой" (isLarge)
 function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     modalTitle.innerText = title;
     modalBody.innerHTML = bodyHtml;
@@ -18,12 +17,14 @@ function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     if (isLarge) modalWindowBox.classList.add('large-modal');
     else modalWindowBox.classList.remove('large-modal');
     
-    modalBackdrop.classList.add('active');
+    setTimeout(() => {
+        modalBackdrop.classList.add('active');
+    }, 15);
 }
 
 function closeModal() {
     modalBackdrop.classList.remove('active');
-    setTimeout(() => modalBody.innerHTML = '', 300); // Очищаем после анимации
+    setTimeout(() => modalBody.innerHTML = '', 350);
 }
 
 modalBackdrop.addEventListener('click', (e) => {
@@ -63,19 +64,15 @@ async function loadData() {
     }
 }
 
-// РЕНДЕР КАРТОЧЕК НА ГЛАВНОЙ (Теперь они кликабельны)
 function renderPortfolio() {
     const grid = document.getElementById('portfolioGrid');
     grid.innerHTML = '';
 
     currentPortfolio.forEach((work) => {
-        // Поддержка старых данных (если title нет)
         const displayTitle = work.title || work.desc || 'Проект';
         const displayImg = work.mainImage || work.url;
-
         const card = document.createElement('div');
         card.className = 'portfolio-card';
-        
         card.innerHTML = `
             <div class="portfolio-img-wrapper" onclick="openProjectDetails('${work._id}')">
                 <img src="${displayImg}" alt="${escapeHtml(displayTitle)}" loading="lazy">
@@ -90,23 +87,17 @@ function renderPortfolio() {
     });
 }
 
-// ОТКРЫТИЕ КЕЙСА (ДЕТАЛЬНЫЙ ПРОСМОТР)
 window.openProjectDetails = function(id) {
     const project = currentPortfolio.find(p => p._id === id);
     if (!project) return;
-
     const displayImg = project.mainImage || project.url;
     const gallery = project.gallery && project.gallery.length > 0 ? project.gallery : [displayImg];
     
-    // Генерируем миниатюры
     let galleryHtml = '';
     if (gallery.length > 1) {
-        galleryHtml = gallery.map(img => `
-            <img src="${img}" class="gallery-thumb" onclick="document.getElementById('modalMainImage').src='${img}'" alt="thumb">
-        `).join('');
+        galleryHtml = gallery.map(img => `<img src="${img}" class="gallery-thumb" onclick="document.getElementById('modalMainImage').src='${img}'" alt="thumb">`).join('');
     }
 
-    // Собираем плашки с характеристиками
     let statsHtml = '';
     if (project.area) statsHtml += `<div class="stat-badge">📐 Площадь: <strong>${escapeHtml(project.area)}</strong></div>`;
     if (project.duration) statsHtml += `<div class="stat-badge">⏱ Сроки: <strong>${escapeHtml(project.duration)}</strong></div>`;
@@ -120,26 +111,12 @@ window.openProjectDetails = function(id) {
             </div>
             <div class="case-info">
                 ${statsHtml ? `<div class="case-stats">${statsHtml}</div>` : ''}
-                
-                ${project.task ? `
-                    <div class="case-section">
-                        <h4>Задача проекта</h4>
-                        <p>${escapeHtml(project.task).replace(/\n/g, '<br>')}</p>
-                    </div>
-                ` : ''}
-                
-                ${project.solution ? `
-                    <div class="case-section">
-                        <h4>Реализация</h4>
-                        <p>${escapeHtml(project.solution).replace(/\n/g, '<br>')}</p>
-                    </div>
-                ` : ''}
-                
+                ${project.task ? `<div class="case-section"><h4>Задача проекта</h4><p>${escapeHtml(project.task).replace(/\n/g, '<br>')}</p></div>` : ''}
+                ${project.solution ? `<div class="case-section"><h4>Реализация</h4><p>${escapeHtml(project.solution).replace(/\n/g, '<br>')}</p></div>` : ''}
                 ${!project.task && !project.solution ? `<p style="color: #666; font-style: italic;">Подробное описание для этого проекта пока не добавлено.</p>` : ''}
             </div>
         </div>
     `;
-
     openModal(project.title || 'Детали проекта', html, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
 }
 
@@ -150,10 +127,7 @@ function renderReviews() {
         const card = document.createElement('div');
         card.className = 'review-card';
         card.innerHTML = `
-            <div class="review-header">
-                <span class="review-author">${escapeHtml(rev.name)}</span>
-                ${isAdminLoggedIn ? `<button class="review-delete-btn admin-only" onclick="confirmDeleteReview('${rev._id}')">Удалить</button>` : ''}
-            </div>
+            <div class="review-header"><span class="review-author">${escapeHtml(rev.name)}</span>${isAdminLoggedIn ? `<button class="review-delete-btn admin-only" onclick="confirmDeleteReview('${rev._id}')">Удалить</button>` : ''}</div>
             <p class="review-text">«${escapeHtml(rev.text)}»</p>
         `;
         grid.appendChild(card);
@@ -166,20 +140,66 @@ function toggleUploadMode() {
     document.getElementById('fileInputGroup').style.display = isUrl ? 'none' : 'block';
 }
 
-// ДОБАВЛЕНИЕ НОВОГО ПРОЕКТА
+// === МАГИЯ АВТО-СЖАТИЯ ФОТОГРАФИЙ (Canvas API) ===
+async function compressImage(file, maxWidth = 1200, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > maxWidth) {
+                    height = Math.round((height * maxWidth) / width);
+                    width = maxWidth;
+                }
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now(),
+                    });
+                    resolve(compressedFile);
+                }, 'image/jpeg', quality);
+            };
+            img.onerror = (error) => reject(error);
+        };
+        reader.onerror = (error) => reject(error);
+    });
+}
+
 async function handleAddWork() {
     const uploadType = document.querySelector('input[name="uploadType"]:checked').value;
     const btn = document.getElementById('uploadWorkBtn');
     
-    // Сбор данных со всех полей
+    // Сбор текста
     const title = document.getElementById('workTitleInput').value.trim() || 'Проект без названия';
-    const area = document.getElementById('workAreaInput').value.trim();
-    const duration = document.getElementById('workDurationInput').value.trim();
-    const budget = document.getElementById('workBudgetInput').value.trim();
     const task = document.getElementById('workTaskInput').value.trim();
     const solution = document.getElementById('workSolutionInput').value.trim();
 
-    btn.innerText = 'Загрузка...';
+    // Склейка цифр с выбранными единицами измерения
+    const areaVal = document.getElementById('workAreaInput').value.trim();
+    const areaUnit = document.getElementById('workAreaUnit').value;
+    const area = areaVal ? `${areaVal} ${areaUnit}` : '';
+
+    const durVal = document.getElementById('workDurationInput').value.trim();
+    const durUnit = document.getElementById('workDurationUnit').value;
+    const duration = durVal ? `${durVal} ${durUnit}` : '';
+
+    const budVal = document.getElementById('workBudgetInput').value.trim();
+    const budUnit = document.getElementById('workBudgetUnit').value;
+    const budget = budVal ? `${budVal} ${budUnit}` : '';
+
+    btn.innerText = 'Сжатие фото и загрузка...';
     btn.disabled = true;
 
     try {
@@ -206,9 +226,11 @@ async function handleAddWork() {
             formData.append('task', task);
             formData.append('solution', solution);
             
-            // Добавляем все файлы в массив
+            // Прогоняем каждый файл через компрессор перед отправкой
             for(let i = 0; i < fileInput.files.length; i++) {
-                formData.append('images', fileInput.files[i]);
+                const originalFile = fileInput.files[i];
+                const compressedFile = await compressImage(originalFile, 1200, 0.8);
+                formData.append('images', compressedFile);
             }
             
             response = await fetch('/api/portfolio/file', {
@@ -223,7 +245,7 @@ async function handleAddWork() {
         currentPortfolio.unshift(result);
         renderPortfolio();
         
-        // Очистка полей
+        // Очистка
         document.getElementById('workMainImageInput').value = '';
         document.getElementById('workFileInput').value = '';
         document.getElementById('workTitleInput').value = '';
@@ -243,58 +265,33 @@ async function handleAddWork() {
 }
 
 function confirmDeleteWork(id) {
-    openModal("Удаление проекта", "<p>Точно удалить эту работу?</p>", `
-        <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-        <button class="btn btn-danger" onclick="executeDeleteWork('${id}')">Удалить</button>
-    `);
+    openModal("Удаление проекта", "<p>Точно удалить эту работу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteWork('${id}')">Удалить</button>`);
 }
-
 async function executeDeleteWork(id) {
     try {
-        const response = await fetch(`/api/portfolio/${id}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: adminPassword })
-        });
+        const response = await fetch(`/api/portfolio/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword }) });
         if (!response.ok) throw new Error("Ошибка");
         currentPortfolio = currentPortfolio.filter(w => w._id !== id);
-        renderPortfolio();
-        closeModal();
-        showToast("Удалено");
+        renderPortfolio(); closeModal(); showToast("Удалено");
     } catch (error) { showToast(error.message, "error"); }
 }
 
 function confirmDeleteReview(id) {
-    openModal("Удаление отзыва", "<p>Удалить отзыв?</p>", `
-        <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-        <button class="btn btn-danger" onclick="executeDeleteReview('${id}')">Удалить</button>
-    `);
+    openModal("Удаление отзыва", "<p>Удалить отзыв?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteReview('${id}')">Удалить</button>`);
 }
-
 async function executeDeleteReview(id) {
     try {
-        const response = await fetch(`/api/reviews/${id}`, {
-            method: 'DELETE',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: adminPassword })
-        });
+        const response = await fetch(`/api/reviews/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword }) });
         if (!response.ok) throw new Error("Ошибка");
         currentReviews = currentReviews.filter(r => r._id !== id);
-        renderReviews();
-        closeModal();
-        showToast("Удалено");
+        renderReviews(); closeModal(); showToast("Удалено");
     } catch (error) { showToast(error.message, "error"); }
 }
 
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
         e.preventDefault();
-        openModal("Вход", `
-            <input type="password" id="adminPasswordInput" placeholder="Пароль" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">
-        `, `
-            <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
-            <button class="btn btn-primary" onclick="verifyAdminPassword()">Войти</button>
-        `);
+        openModal("Вход", `<input type="password" id="adminPasswordInput" placeholder="Пароль" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc;">`, `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-primary" onclick="verifyAdminPassword()">Войти</button>`);
         setTimeout(() => document.getElementById('adminPasswordInput')?.focus(), 100);
     }
 });
@@ -302,19 +299,10 @@ document.addEventListener('keydown', (e) => {
 async function verifyAdminPassword() {
     const inputPass = document.getElementById('adminPasswordInput').value;
     try {
-        const response = await fetch('/api/verify-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: inputPass })
-        });
+        const response = await fetch('/api/verify-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: inputPass }) });
         if (response.ok) {
-            adminPassword = inputPass;
-            isAdminLoggedIn = true;
-            document.body.classList.add('admin-mode');
-            renderPortfolio();
-            renderReviews();
-            closeModal();
-            showToast("Доступ открыт!");
+            adminPassword = inputPass; isAdminLoggedIn = true; document.body.classList.add('admin-mode');
+            renderPortfolio(); renderReviews(); closeModal(); showToast("Доступ открыт!");
         } else showToast("Неверный пароль", "error");
     } catch (err) { showToast("Ошибка связи", "error"); }
 }
@@ -330,29 +318,15 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
-
-    if (!emailRegex.test(contact) && !phoneRegex.test(contact)) {
-        contactError.classList.add('active');
-        contactInput.focus();
-        return;
-    }
+    if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
     contactError.classList.remove('active');
-
-    submitBtn.disabled = true;
-    submitBtn.innerText = 'Отправка...';
+    submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
 
     try {
-        const response = await fetch('/api/reviews', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, contact, text })
-        });
+        const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, text }) });
         if (!response.ok) throw new Error("Ошибка");
         const savedReview = await response.json();
-        currentReviews.unshift(savedReview);
-        renderReviews();
-        e.target.reset();
-        showToast("Отзыв опубликован!");
+        currentReviews.unshift(savedReview); renderReviews(); e.target.reset(); showToast("Отзыв опубликован!");
     } catch (error) { showToast("Ошибка", "error"); } 
     finally { submitBtn.disabled = false; submitBtn.innerText = 'Опубликовать отзыв'; }
 });

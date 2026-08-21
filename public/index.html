@@ -101,7 +101,7 @@
                 <p>Кликните на проект, чтобы рассмотреть детали и галерею</p>
             </div>
 
-            <!-- РАСШИРЕННАЯ АДМИН ПАНЕЛЬ -->
+            <!-- РАСШИРЕННАЯ АДМИН ПАНЕЛЬ С ВЫБОРОМ ЕДИНИЦ ИЗМЕРЕНИЯ -->
             <div class="admin-only admin-panel" id="adminPortfolioPanel">
                 <div class="admin-panel-header">
                     <h4>Добавление нового Кейса</h4>
@@ -119,14 +119,39 @@
                     </div>
                     <div id="fileInputGroup" style="display: none;">
                         <input type="file" id="workFileInput" accept="image/png, image/jpeg, image/webp" multiple style="background: #fff; padding: 9px; width: 100%;">
-                        <small style="color: #888;">Первое фото станет обложкой проекта</small>
+                        <small style="color: #888; display: block; margin-top: 4px;">Первое фото станет обложкой. Картинки будут сжаты автоматически!</small>
                     </div>
                     
                     <input type="text" id="workTitleInput" placeholder="Название проекта (Напр. Квартира в ЖК Минск-Мир)">
+                    
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                        <input type="text" id="workAreaInput" placeholder="Площадь (напр. 75 м²)">
-                        <input type="text" id="workDurationInput" placeholder="Сроки (напр. 4 месяца)">
-                        <input type="text" id="workBudgetInput" placeholder="Бюджет (необязательно)">
+                        <!-- Поле Площади -->
+                        <div class="input-with-select">
+                            <input type="number" id="workAreaInput" placeholder="Площадь">
+                            <select id="workAreaUnit">
+                                <option value="м²">м²</option>
+                                <option value="кв.м.">кв.м.</option>
+                            </select>
+                        </div>
+                        <!-- Поле Сроков -->
+                        <div class="input-with-select">
+                            <input type="number" id="workDurationInput" placeholder="Сроки">
+                            <select id="workDurationUnit">
+                                <option value="мес.">мес.</option>
+                                <option value="нед.">нед.</option>
+                                <option value="дн.">дн.</option>
+                            </select>
+                        </div>
+                        <!-- Поле Бюджета -->
+                        <div class="input-with-select">
+                            <input type="number" id="workBudgetInput" placeholder="Бюджет">
+                            <select id="workBudgetUnit">
+                                <option value="₽">₽</option>
+                                <option value="BYN">BYN</option>
+                                <option value="$">$</option>
+                                <option value="€">€</option>
+                            </select>
+                        </div>
                     </div>
                     
                     <textarea id="workTaskInput" rows="2" placeholder="Какая задача стояла (Запросы клиента)"></textarea>
@@ -136,9 +161,7 @@
                 <button class="btn btn-primary btn-block" style="margin-top: 16px;" id="uploadWorkBtn" onclick="handleAddWork()">Опубликовать проект</button>
             </div>
 
-            <div class="portfolio-grid" id="portfolioGrid">
-                <!-- Карточки генерируются JS -->
-            </div>
+            <div class="portfolio-grid" id="portfolioGrid"></div>
         </div>
     </section>
 
@@ -192,7 +215,6 @@
         </div>
     </footer>
 
-    <!-- Улучшенное модальное окно (поддерживает широкий режим) -->
     <div class="modal-backdrop" id="modalBackdrop">
         <div class="modal-window" id="modalWindowBox">
             <div class="modal-header">

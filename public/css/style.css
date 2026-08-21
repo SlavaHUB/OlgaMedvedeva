@@ -821,6 +821,35 @@ body.admin-mode .admin-only {
     border-left: 4px solid #EF4444;
 }
 
+/* === UI ВЫБОРА ЕДИНИЦ ИЗМЕРЕНИЯ (Админка) === */
+.input-with-select {
+    display: flex;
+    border: 1px solid #D97706;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #ffffff;
+}
+
+.input-with-select input {
+    border: none !important;
+    border-radius: 0 !important;
+    flex-grow: 1;
+    min-width: 50px;
+    outline: none;
+}
+
+.input-with-select select {
+    background: #FDE68A;
+    border: none;
+    border-left: 1px solid #D97706;
+    padding: 0 10px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    color: var(--color-primary);
+    outline: none;
+    cursor: pointer;
+}
+
 @keyframes toastIn {
     from {
         transform: translateX(100%);
