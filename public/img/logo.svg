@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Внешний темный круг -->
+  <circle cx="50" cy="50" r="46" fill="none" stroke="#1F2421" stroke-width="1.5"/>
+  <!-- Внутренний золотой круг -->
+  <circle cx="50" cy="50" r="39" fill="none" stroke="#C5A059" stroke-width="1"/>
+  <!-- Элегантные буквы OM -->
+  <text x="50" y="58" font-family="'Playfair Display', serif" font-size="36" font-weight="700" fill="#1F2421" text-anchor="middle">OM</text>
+  <!-- Строгая подпись DESIGN -->
+  <text x="50" y="74" font-family="'Montserrat', sans-serif" font-size="9" font-weight="600" letter-spacing="3" fill="#C5A059" text-anchor="middle">DESIGN</text>
+</svg>
