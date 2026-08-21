@@ -100,27 +100,57 @@ body {
     gap: 32px;
 }
 
+/* КРАСИВАЯ АНИМАЦИЯ ПОДЧЕРКИВАНИЯ ДЛЯ ССЫЛОК */
 .nav-menu a {
+    position: relative;
     text-decoration: none;
     color: var(--color-text-main);
     font-weight: 500;
     font-size: 0.95rem;
-    transition: var(--transition);
+    transition: color 0.3s ease;
 }
 
 .nav-menu a:hover {
     color: var(--color-accent);
 }
 
+/* Сама линия, которая появляется снизу */
+.nav-menu a::after {
+    content: '';
+    position: absolute;
+    width: 0;
+    height: 2px;
+    bottom: -6px;
+    /* Расстояние от текста до линии */
+    left: 50%;
+    background-color: var(--color-accent);
+    transition: width 0.3s ease, left 0.3s ease;
+    transform: translateX(-50%);
+}
+
+.nav-menu a:hover::after {
+    width: 100%;
+}
+
+/* КНОПКА "КОНТАКТЫ" НА ПК */
 .nav-btn {
     padding: 8px 18px;
     border: 1px solid var(--color-accent);
     border-radius: var(--radius-sm);
+    transition: all 0.3s ease;
+}
+
+/* Отключаем подчеркивание конкретно для кнопки */
+.nav-btn::after {
+    display: none;
 }
 
 .nav-btn:hover {
     background-color: var(--color-accent);
     color: #fff !important;
+    box-shadow: 0 4px 15px rgba(197, 160, 89, 0.35);
+    /* Эффект свечения */
+    transform: translateY(-2px);
 }
 
 .btn {
@@ -890,10 +920,18 @@ body.admin-mode .admin-only {
         border-radius: 6px;
     }
 
+    .nav-menu a::after {
+        display: none;
+    }
+
     .nav-btn {
         display: inline-block !important;
         border: none !important;
-        background: rgba(197, 160, 89, 0.2) !important;
+        background: rgba(197, 160, 89, 0.1) !important;
+        /* Фон как у всех */
+        color: var(--color-text-main) !important;
+        box-shadow: none !important;
+        transform: none !important;
     }
 
     /* 2. Главный экран и отступы */
