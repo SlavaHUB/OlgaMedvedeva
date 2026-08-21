@@ -9,14 +9,20 @@ const modalTitle = document.getElementById('modalTitle');
 const modalBody = document.getElementById('modalBody');
 const modalFooter = document.getElementById('modalFooter');
 
+// ==========================================
+// БЛОК: УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ
+// ==========================================
 function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     modalTitle.innerText = title;
     modalBody.innerHTML = bodyHtml;
     modalFooter.innerHTML = footerButtonsHtml;
-    
+
     if (isLarge) modalWindowBox.classList.add('large-modal');
     else modalWindowBox.classList.remove('large-modal');
-    
+
+    // БЛОКИРУЕМ СКРОЛЛ ФОНОВОГО САЙТА
+    document.body.style.overflow = 'hidden';
+
     setTimeout(() => {
         modalBackdrop.classList.add('active');
     }, 15);
@@ -24,12 +30,12 @@ function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
 
 function closeModal() {
     modalBackdrop.classList.remove('active');
+
+    // ВОЗВРАЩАЕМ СКРОЛЛ САЙТУ ПРИ ЗАКРЫТИИ
+    document.body.style.overflow = '';
+
     setTimeout(() => modalBody.innerHTML = '', 350);
 }
-
-modalBackdrop.addEventListener('click', (e) => {
-    if (e.target === modalBackdrop) closeModal();
-});
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
@@ -87,12 +93,12 @@ function renderPortfolio() {
     });
 }
 
-window.openProjectDetails = function(id) {
+window.openProjectDetails = function (id) {
     const project = currentPortfolio.find(p => p._id === id);
     if (!project) return;
     const displayImg = project.mainImage || project.url;
     const gallery = project.gallery && project.gallery.length > 0 ? project.gallery : [displayImg];
-    
+
     let galleryHtml = '';
     if (gallery.length > 1) {
         galleryHtml = gallery.map(img => `<img src="${img}" class="gallery-thumb" onclick="document.getElementById('modalMainImage').src='${img}'" alt="thumb">`).join('');
@@ -159,10 +165,10 @@ async function compressImage(file, maxWidth = 1200, quality = 0.8) {
                 }
                 canvas.width = width;
                 canvas.height = height;
-                
+
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                
+
                 canvas.toBlob((blob) => {
                     const compressedFile = new File([blob], file.name, {
                         type: 'image/jpeg',
@@ -180,7 +186,7 @@ async function compressImage(file, maxWidth = 1200, quality = 0.8) {
 async function handleAddWork() {
     const uploadType = document.querySelector('input[name="uploadType"]:checked').value;
     const btn = document.getElementById('uploadWorkBtn');
-    
+
     // Сбор текста
     const title = document.getElementById('workTitleInput').value.trim() || 'Проект без названия';
     const task = document.getElementById('workTaskInput').value.trim();
@@ -207,7 +213,7 @@ async function handleAddWork() {
         if (uploadType === 'url') {
             const mainImage = document.getElementById('workMainImageInput').value.trim();
             if (!mainImage) throw new Error("Введите ссылку на фото");
-            
+
             response = await fetch('/api/portfolio/url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -216,7 +222,7 @@ async function handleAddWork() {
         } else {
             const fileInput = document.getElementById('workFileInput');
             if (fileInput.files.length === 0) throw new Error("Выберите хотя бы один файл");
-            
+
             const formData = new FormData();
             formData.append('password', adminPassword);
             formData.append('title', title);
@@ -225,14 +231,14 @@ async function handleAddWork() {
             formData.append('budget', budget);
             formData.append('task', task);
             formData.append('solution', solution);
-            
+
             // Прогоняем каждый файл через компрессор перед отправкой
-            for(let i = 0; i < fileInput.files.length; i++) {
+            for (let i = 0; i < fileInput.files.length; i++) {
                 const originalFile = fileInput.files[i];
                 const compressedFile = await compressImage(originalFile, 1200, 0.8);
                 formData.append('images', compressedFile);
             }
-            
+
             response = await fetch('/api/portfolio/file', {
                 method: 'POST',
                 body: formData
@@ -244,7 +250,7 @@ async function handleAddWork() {
 
         currentPortfolio.unshift(result);
         renderPortfolio();
-        
+
         // Очистка
         document.getElementById('workMainImageInput').value = '';
         document.getElementById('workFileInput').value = '';
@@ -254,7 +260,7 @@ async function handleAddWork() {
         document.getElementById('workBudgetInput').value = '';
         document.getElementById('workTaskInput').value = '';
         document.getElementById('workSolutionInput').value = '';
-        
+
         showToast("Проект успешно опубликован!");
     } catch (err) {
         showToast(err.message, "error");
@@ -303,9 +309,9 @@ async function verifyAdminPassword() {
         if (response.ok) {
             adminPassword = inputPass; isAdminLoggedIn = true; document.body.classList.add('admin-mode');
             renderPortfolio(); renderReviews(); closeModal(); showToast("Доступ открыт!");
-            
+
             toggleUploadMode();
-            
+
         } else showToast("Неверный пароль", "error");
     } catch (err) { showToast("Ошибка связи", "error"); }
 }
@@ -330,7 +336,7 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
         if (!response.ok) throw new Error("Ошибка");
         const savedReview = await response.json();
         currentReviews.unshift(savedReview); renderReviews(); e.target.reset(); showToast("Отзыв опубликован!");
-    } catch (error) { showToast("Ошибка", "error"); } 
+    } catch (error) { showToast("Ошибка", "error"); }
     finally { submitBtn.disabled = false; submitBtn.innerText = 'Опубликовать отзыв'; }
 });
 
