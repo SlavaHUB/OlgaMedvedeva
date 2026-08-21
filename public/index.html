@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ольга Медведева | Дизайн интерьеров и согласование перепланировок</title>
+    <title>Ольга Медведева | Дизайн интерьеров</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Добавлен шрифт Caveat для рукописного логотипа -->
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
     <style> body { opacity: 0; transition: opacity 0.4s ease; } </style>
     <script>
         (function () {
@@ -20,9 +21,13 @@
 </head>
 <body>
 
+    <!-- ========================================== -->
+    <!-- БЛОК 1: НАВИГАЦИЯ И ГЛАВНЫЙ ЭКРАН          -->
+    <!-- ========================================== -->
     <header class="header">
         <nav class="nav-container">
-            <a href="#" class="logo">Ольга <span>Медведева</span></a>
+            <!-- Новый рукописный логотип -->
+            <a href="#" class="logo">Ольга Медведева<span>Дизайн интерьеров</span></a>
             <ul class="nav-menu">
                 <li><a href="#about">Обо мне</a></li>
                 <li><a href="#services">Услуги</a></li>
@@ -53,6 +58,9 @@
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- БЛОК 2: УСЛУГИ                             -->
+    <!-- ========================================== -->
     <section class="services-section" id="services">
         <div class="container">
             <div class="section-title">
@@ -94,6 +102,9 @@
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- БЛОК 3: ПОРТФОЛИО И АДМИНКА                -->
+    <!-- ========================================== -->
     <section class="portfolio-section" id="portfolio">
         <div class="container">
             <div class="section-title">
@@ -101,7 +112,6 @@
                 <p>Кликните на проект, чтобы рассмотреть детали и галерею</p>
             </div>
 
-            <!-- РАСШИРЕННАЯ АДМИН ПАНЕЛЬ С ВЫБОРОМ ЕДИНИЦ ИЗМЕРЕНИЯ -->
             <div class="admin-only admin-panel" id="adminPortfolioPanel">
                 <div class="admin-panel-header">
                     <h4>Добавление нового проекта</h4>
@@ -125,32 +135,17 @@
                     <input type="text" id="workTitleInput" placeholder="Название проекта (Напр. Квартира в ЖК Минск-Мир)">
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
-                        <!-- Поле Площади -->
                         <div class="input-with-select">
                             <input type="number" id="workAreaInput" placeholder="Площадь">
-                            <select id="workAreaUnit">
-                                <option value="м²">м²</option>
-                                <option value="кв.м.">кв.м.</option>
-                            </select>
+                            <select id="workAreaUnit"><option value="м²">м²</option><option value="кв.м.">кв.м.</option></select>
                         </div>
-                        <!-- Поле Сроков -->
                         <div class="input-with-select">
                             <input type="number" id="workDurationInput" placeholder="Сроки">
-                            <select id="workDurationUnit">
-                                <option value="мес.">мес.</option>
-                                <option value="нед.">нед.</option>
-                                <option value="дн.">дн.</option>
-                            </select>
+                            <select id="workDurationUnit"><option value="мес.">мес.</option><option value="нед.">нед.</option><option value="дн.">дн.</option></select>
                         </div>
-                        <!-- Поле Бюджета -->
                         <div class="input-with-select">
                             <input type="number" id="workBudgetInput" placeholder="Бюджет">
-                            <select id="workBudgetUnit">
-                                <option value="₽">₽</option>
-                                <option value="BYN">BYN</option>
-                                <option value="$">$</option>
-                                <option value="€">€</option>
-                            </select>
+                            <select id="workBudgetUnit"><option value="₽">₽</option><option value="BYN">BYN</option><option value="$">$</option><option value="€">€</option></select>
                         </div>
                     </div>
                     
@@ -165,6 +160,9 @@
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- БЛОК 4: ОТЗЫВЫ                             -->
+    <!-- ========================================== -->
     <section class="reviews-section" id="reviews">
         <div class="container">
             <div class="section-title">
@@ -197,6 +195,9 @@
         </div>
     </section>
 
+    <!-- ========================================== -->
+    <!-- БЛОК 5: ПОДВАЛ И МОДАЛЬНЫЕ ОКНА            -->
+    <!-- ========================================== -->
     <footer class="footer-section" id="contacts">
         <div class="container">
             <div class="footer-content">
