@@ -384,6 +384,18 @@ body {
 .portfolio-delete-btn {
     align-self: flex-start;
     margin-top: 10px;
+    background: none;
+    border: none;
+    color: var(--color-danger);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.portfolio-delete-btn:hover {
+    color: var(--color-danger-hover);
+    text-decoration: underline;
 }
 
 /* Отзывы (с исправленным Flexbox!) */

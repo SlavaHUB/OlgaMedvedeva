@@ -303,6 +303,9 @@ async function verifyAdminPassword() {
         if (response.ok) {
             adminPassword = inputPass; isAdminLoggedIn = true; document.body.classList.add('admin-mode');
             renderPortfolio(); renderReviews(); closeModal(); showToast("Доступ открыт!");
+            
+            toggleUploadMode();
+            
         } else showToast("Неверный пароль", "error");
     } catch (err) { showToast("Ошибка связи", "error"); }
 }
