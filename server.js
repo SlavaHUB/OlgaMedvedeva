@@ -13,17 +13,16 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 
 mongoose.connect(process.env.MONGO_URI)
     .then(() => console.log('✅ Успешное подключение к MongoDB Atlas'))
     .catch(err => console.error('❌ Ошибка подключения к БД:', err));
 
-// === НОВАЯ СХЕМА ПРОЕКТОВ (КЕЙСЫ) ===
 const workSchema = new mongoose.Schema({
     title: { type: String, default: 'Дизайн-проект' },
     mainImage: { type: String, required: true },
-    gallery: [{ type: String }], // Массив дополнительных фото
+    gallery: [{ type: String }],
     area: { type: String, default: '' },
     duration: { type: String, default: '' },
     budget: { type: String, default: '' },
@@ -71,14 +70,13 @@ app.get('/api/portfolio', async (req, res) => {
     }
 });
 
-// ДОБАВЛЕНИЕ ПО ССЫЛКЕ
 app.post('/api/portfolio/url', async (req, res) => {
     try {
         const { password, title, mainImage, area, duration, budget, task, solution } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
 
-        const newWork = new Work({ 
-            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution 
+        const newWork = new Work({
+            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution
         });
         await newWork.save();
         res.status(201).json(newWork);
@@ -87,19 +85,18 @@ app.post('/api/portfolio/url', async (req, res) => {
     }
 });
 
-// ДОБАВЛЕНИЕ ФАЙЛАМИ (до 10 фото за раз)
 app.post('/api/portfolio/file', upload.array('images', 10), async (req, res) => {
     try {
         const { password, title, area, duration, budget, task, solution } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
         if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Файлы не загружены' });
 
-        const mainImage = req.files[0].path; // Первое фото - главное
-        const gallery = req.files.map(file => file.path); // Все фото - в галерею
+        const mainImage = req.files[0].path;
+        const gallery = req.files.map(file => file.path);
 
-        const newWork = new Work({ 
-            title, mainImage, gallery, area, duration, budget, task, solution 
-        }); 
+        const newWork = new Work({
+            title, mainImage, gallery, area, duration, budget, task, solution
+        });
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
@@ -119,7 +116,8 @@ app.delete('/api/portfolio/:id', async (req, res) => {
 
 app.get('/api/reviews', async (req, res) => {
     try {
-        const reviews = await Review.find({}, 'name text createdAt').sort({ createdAt: -1 });
+        // 🔥 Убрали ограничение полей, теперь сервер возвращает все данные, включая контакт
+        const reviews = await Review.find().sort({ createdAt: -1 });
         res.json(reviews);
     } catch (error) {
         res.status(500).json({ error: 'Ошибка сервера' });

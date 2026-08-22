@@ -3,11 +3,9 @@ let currentReviews = [];
 let adminPassword = "";
 let isAdminLoggedIn = false;
 
-// Логика пагинации отзывов
 let currentReviewPage = 1;
-const reviewsPerPage = 5; // Показываем 5 отзывов + 1 кнопка "Оставить отзыв" = 6 блоков
+const reviewsPerPage = 5; 
 
-// УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ
 const modalBackdrop = document.getElementById('modalBackdrop');
 modalBackdrop.addEventListener('click', function (event) {
     if (event.target === modalBackdrop) closeModal();
@@ -33,7 +31,6 @@ function closeModal() {
     setTimeout(() => modalBody.innerHTML = '', 350);
 }
 
-// УВЕДОМЛЕНИЯ
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -52,7 +49,6 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ЗАГРУЗКА И РЕНДЕР ДАННЫХ
 async function loadData() {
     try {
         const [portfolioRes, reviewsRes] = await Promise.all([
@@ -68,7 +64,6 @@ async function loadData() {
     }
 }
 
-// ПОРТФОЛИО
 function renderPortfolio() {
     const grid = document.getElementById('portfolioGrid');
     grid.innerHTML = '';
@@ -127,12 +122,10 @@ window.openProjectDetails = function (id) {
     openModal(project.title || 'Детали проекта', html, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
 }
 
-// ОТЗЫВЫ И ПАГИНАЦИЯ
 function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
     grid.innerHTML = '';
     
-    // Рассчитываем пагинацию
     const totalPages = Math.ceil(currentReviews.length / reviewsPerPage) || 1;
     if (currentReviewPage > totalPages) currentReviewPage = totalPages;
     
@@ -140,11 +133,14 @@ function renderReviews() {
     const end = start + reviewsPerPage;
     const pageReviews = currentReviews.slice(start, end);
 
-    // Рисуем отзывы
     pageReviews.forEach((rev) => {
-        // Форматируем дату и берем первую букву имени для круглой аватарки
         const date = rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('ru-RU') : 'Недавно';
         const initial = rev.name.charAt(0).toUpperCase();
+
+        // 🔥 Выводим номер телефона ТОЛЬКО если админ вошел
+        const adminContactHtml = (isAdminLoggedIn && rev.contact) 
+            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>` 
+            : '';
 
         const card = document.createElement('div');
         card.className = 'review-card';
@@ -155,6 +151,7 @@ function renderReviews() {
                     <div>
                         <span class="review-author">${escapeHtml(rev.name)}</span>
                         <div class="review-date">${date}</div>
+                        ${adminContactHtml}
                     </div>
                 </div>
                 ${isAdminLoggedIn ? `<button class="review-delete-btn admin-only" onclick="confirmDeleteReview('${rev._id}')">Удалить</button>` : ''}
@@ -164,7 +161,6 @@ function renderReviews() {
         grid.appendChild(card);
     });
 
-    // Рисуем карточку "Оставить отзыв" в самом конце грида
     const addCard = document.createElement('div');
     addCard.className = 'review-card add-review-card';
     addCard.onclick = openReviewModal;
@@ -187,7 +183,7 @@ function renderReviewPagination(totalPages) {
     }
     paginationContainer.innerHTML = '';
 
-    if (totalPages <= 1) return; // Прячем кнопки, если страниц нет
+    if (totalPages <= 1) return;
 
     for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement('button');
@@ -196,14 +192,12 @@ function renderReviewPagination(totalPages) {
         btn.onclick = () => { 
             currentReviewPage = i; 
             renderReviews(); 
-            // Прокрутка к началу секции отзывов при смене страницы
             document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' });
         };
         paginationContainer.appendChild(btn);
     }
 }
 
-// МОДАЛКА ДЛЯ ФОРМЫ ОТЗЫВА
 window.openReviewModal = function() {
     const formHtml = `
         <form id="modalReviewForm" novalidate style="margin-top: 10px;">
@@ -251,7 +245,7 @@ window.submitModalReview = async function() {
         if (!response.ok) throw new Error("Ошибка");
         const savedReview = await response.json();
         currentReviews.unshift(savedReview); 
-        currentReviewPage = 1; // Перебрасываем на первую страницу, чтобы показать новый отзыв
+        currentReviewPage = 1; 
         renderReviews(); 
         closeModal(); 
         showToast("Отзыв успешно опубликован!");
@@ -267,7 +261,6 @@ function toggleUploadMode() {
     document.getElementById('fileInputGroup').style.display = isUrl ? 'none' : 'block';
 }
 
-// СЖАТИЕ ФОТО
 async function compressImage(file, maxWidth = 1200, quality = 0.8) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -293,7 +286,6 @@ async function compressImage(file, maxWidth = 1200, quality = 0.8) {
     });
 }
 
-// ДОБАВЛЕНИЕ ПРОЕКТА
 async function handleAddWork() {
     const uploadType = document.querySelector('input[name="uploadType"]:checked').value;
     const btn = document.getElementById('uploadWorkBtn');
@@ -353,7 +345,6 @@ async function handleAddWork() {
     finally { btn.innerText = 'Опубликовать проект'; btn.disabled = false; }
 }
 
-// УДАЛЕНИЕ
 function confirmDeleteWork(id) { openModal("Удаление проекта", "<p>Точно удалить эту работу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteWork('${id}')">Удалить</button>`); }
 async function executeDeleteWork(id) {
     try {
@@ -374,7 +365,6 @@ async function executeDeleteReview(id) {
     } catch (error) { showToast(error.message, "error"); }
 }
 
-// АДМИНКА
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
         e.preventDefault();
@@ -395,7 +385,6 @@ async function verifyAdminPassword() {
     } catch (err) { showToast("Ошибка связи", "error"); }
 }
 
-// БУРГЕР МЕНЮ
 const burgerBtn = document.getElementById('burgerBtn');
 const navMenu = document.getElementById('navMenu');
 if (burgerBtn && navMenu) {
@@ -412,6 +401,5 @@ if (burgerBtn && navMenu) {
     });
 }
 
-// ИНИЦИАЛИЗАЦИЯ
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadData);
 else loadData();
