@@ -57,11 +57,8 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 app.post('/api/verify-password', (req, res) => {
-    if (req.body.password === process.env.ADMIN_PASSWORD) {
-        res.status(200).json({ success: true });
-    } else {
-        res.status(403).json({ error: 'Access Denied' });
-    }
+    if (req.body.password === process.env.ADMIN_PASSWORD) res.status(200).json({ success: true });
+    else res.status(403).json({ error: 'Access Denied' });
 });
 
 app.get('/api/portfolio', async (req, res) => {
@@ -128,11 +125,17 @@ app.get('/api/reviews', async (req, res) => {
 
 app.post('/api/reviews', async (req, res) => {
     try {
-        const { name, contact, text } = req.body;
+        const { name, contact, text, date } = req.body;
         if (!name || !contact || !text) return res.status(400).json({ error: 'Invalid data' });
-        const newReview = new Review({ name, contact, text });
+        
+        const reviewData = { name, contact, text };
+        if (date) {
+            reviewData.createdAt = new Date(date);
+        }
+
+        const newReview = new Review(reviewData);
         await newReview.save();
-        res.status(201).json({ _id: newReview._id, name: newReview.name, text: newReview.text });
+        res.status(201).json(newReview);
     } catch (error) {
         res.status(500).json({ error: 'Save Error' });
     }
