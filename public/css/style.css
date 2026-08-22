@@ -162,7 +162,7 @@ body.admin-mode .admin-only { display: block; }
 .case-media { display: flex; flex-direction: column; min-width: 0; align-self: flex-start; gap: 16px; }
 
 .case-main-image-wrapper { position: relative; width: 100%; border-radius: var(--radius-sm); overflow: hidden; background: #E5E7EB; }
-.case-main-image { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.case-main-image { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; display: block; transition: opacity 0.25s ease-in-out; }
 .slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.8); border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; color: var(--color-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); z-index: 10; box-shadow: var(--shadow-soft); }
 .slider-btn:hover { background: var(--color-accent); color: #fff; }
 .prev-btn { left: 16px; }

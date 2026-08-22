@@ -147,9 +147,18 @@ window.openProjectDetails = function (id) {
     openModal(project.title || 'Детали проекта', html, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
 }
 
+function updateMainImageSmoothly(index) {
+    const imgEl = document.getElementById('modalMainImage');
+    imgEl.style.opacity = '0.3'; 
+    setTimeout(() => {
+        imgEl.src = currentModalGallery[index];
+        imgEl.onload = () => imgEl.style.opacity = '1';
+    }, 150);
+}
+
 window.setModalImage = function(index) {
     currentModalImageIndex = index;
-    document.getElementById('modalMainImage').src = currentModalGallery[currentModalImageIndex];
+    updateMainImageSmoothly(currentModalImageIndex);
     document.getElementById('modalBody').scrollTo({top: 0, behavior: 'smooth'});
 }
 
@@ -157,7 +166,7 @@ window.changeModalImage = function(step) {
     currentModalImageIndex += step;
     if (currentModalImageIndex < 0) currentModalImageIndex = currentModalGallery.length - 1;
     if (currentModalImageIndex >= currentModalGallery.length) currentModalImageIndex = 0;
-    document.getElementById('modalMainImage').src = currentModalGallery[currentModalImageIndex];
+    updateMainImageSmoothly(currentModalImageIndex);
 }
 
 function renderReviews() {
