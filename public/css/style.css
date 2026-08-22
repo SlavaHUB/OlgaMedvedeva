@@ -839,8 +839,13 @@ body.admin-mode .admin-only {
     max-width: 1200px;
 }
 
-.modal-window.large-modal .modal-body {
+/* 🔥 ДОБАВИЛИ ОТСТУПЫ ДЛЯ ВСЕХ МОДАЛОК (ВКЛЮЧАЯ ОТЗЫВЫ) */
+.modal-body {
+    padding: 24px 32px;
     overflow-y: auto;
+}
+
+.modal-window.large-modal .modal-body {
     padding: 32px;
     min-height: 0;
 }
@@ -1153,36 +1158,32 @@ body.admin-mode .admin-only {
         gap: 12px;
     }
 
+    /* Модалка (Исправленные отступы) */
     .modal-backdrop {
         padding: 10px;
         height: 100dvh;
     }
 
     .modal-window.large-modal {
-        max-width: 1200px;
+        max-height: calc(100dvh - 20px);
     }
 
-    /* 🔥 ДОБАВИЛИ ОТСТУПЫ ДЛЯ ВСЕХ МОДАЛОК (ВКЛЮЧАЯ ОТЗЫВЫ) */
-    .modal-body {
-        padding: 24px 32px;
-        overflow-y: auto;
-    }
-
-    .modal-window.large-modal .modal-body {
-        padding: 32px;
-        min-height: 0;
-    }
-
+    /* Делаем единые боковые отступы 20px для шапки, тела и подвала на телефоне */
     .modal-header {
-        padding: 16px;
+        padding: 16px 20px;
     }
 
     .modal-header h3 {
         font-size: 1.2rem;
     }
 
+    .modal-body,
+    .modal-window.large-modal .modal-body {
+        padding: 20px;
+    }
+
     .modal-footer {
-        padding: 12px 16px;
+        padding: 16px 20px;
         justify-content: center;
     }
 
