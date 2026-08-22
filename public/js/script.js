@@ -8,6 +8,9 @@ const reviewsPerPage = 5;
 
 let closeModalTimer; 
 
+let currentModalGallery = [];
+let currentModalImageIndex = 0;
+
 const modalBackdrop = document.getElementById('modalBackdrop');
 modalBackdrop.addEventListener('click', function (event) {
     if (event.target === modalBackdrop) closeModal();
@@ -38,6 +41,7 @@ function closeModal() {
     closeModalTimer = setTimeout(() => {
         modalBody.innerHTML = '';
         modalFooter.innerHTML = '';
+        currentModalGallery = [];
     }, 350);
 }
 
@@ -100,13 +104,14 @@ window.openProjectDetails = function (id) {
     const project = currentPortfolio.find(p => p._id === id);
     if (!project) return;
     const displayImg = project.mainImage || project.url;
-    const gallery = project.gallery && project.gallery.length > 0 ? project.gallery : [displayImg];
+    
+    currentModalGallery = project.gallery && project.gallery.length > 0 ? project.gallery : [displayImg];
+    currentModalImageIndex = 0;
 
     let galleryHtml = '';
-    if (gallery.length > 1) {
-        galleryHtml = gallery.map(img => `
-            <img src="${img}" class="gallery-thumb" alt="thumb"
-            onclick="document.getElementById('modalMainImage').src='${img}'; document.getElementById('modalBody').scrollTo({top: 0, behavior: 'smooth'});">
+    if (currentModalGallery.length > 1) {
+        galleryHtml = currentModalGallery.map((img, index) => `
+            <img src="${img}" class="gallery-thumb" alt="thumb" onclick="setModalImage(${index})">
         `).join('');
     }
 
@@ -115,10 +120,20 @@ window.openProjectDetails = function (id) {
     if (project.duration) statsHtml += `<div class="stat-badge">⏱ Сроки: <strong>${escapeHtml(project.duration)}</strong></div>`;
     if (project.budget) statsHtml += `<div class="stat-badge">💰 Бюджет: <strong>${escapeHtml(project.budget)}</strong></div>`;
 
+    let mainImageHtml = `
+        <div class="case-main-image-wrapper">
+            <img src="${currentModalGallery[0]}" id="modalMainImage" class="case-main-image">
+            ${currentModalGallery.length > 1 ? `
+                <button class="slider-btn prev-btn" onclick="changeModalImage(-1)">&#10094;</button>
+                <button class="slider-btn next-btn" onclick="changeModalImage(1)">&#10095;</button>
+            ` : ''}
+        </div>
+    `;
+
     const html = `
         <div class="project-case-layout">
             <div class="case-media">
-                <img src="${displayImg}" id="modalMainImage" class="case-main-image">
+                ${mainImageHtml}
                 ${galleryHtml ? `<div class="case-gallery">${galleryHtml}</div>` : ''}
             </div>
             <div class="case-info">
@@ -130,6 +145,19 @@ window.openProjectDetails = function (id) {
         </div>
     `;
     openModal(project.title || 'Детали проекта', html, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
+}
+
+window.setModalImage = function(index) {
+    currentModalImageIndex = index;
+    document.getElementById('modalMainImage').src = currentModalGallery[currentModalImageIndex];
+    document.getElementById('modalBody').scrollTo({top: 0, behavior: 'smooth'});
+}
+
+window.changeModalImage = function(step) {
+    currentModalImageIndex += step;
+    if (currentModalImageIndex < 0) currentModalImageIndex = currentModalGallery.length - 1;
+    if (currentModalImageIndex >= currentModalGallery.length) currentModalImageIndex = 0;
+    document.getElementById('modalMainImage').src = currentModalGallery[currentModalImageIndex];
 }
 
 function renderReviews() {
@@ -148,7 +176,6 @@ function renderReviews() {
         const displayDate = rawDate.toLocaleDateString('ru-RU');
         const initial = rev.name.charAt(0).toUpperCase();
 
-        // 🔥 Если админ, вместо текста рисуем <input type="date">
         let dateHtml = `<div class="review-date">${displayDate}</div>`;
         if (isAdminLoggedIn) {
             const yyyy = rawDate.getFullYear();
@@ -218,7 +245,6 @@ function renderReviewPagination(totalPages) {
     }
 }
 
-// 🔥 НОВАЯ ФУНКЦИЯ: Обновление даты при изменении в инпуте
 window.updateReviewDate = async function(id, newDate) {
     try {
         const response = await fetch(`/api/reviews/${id}`, {
@@ -229,7 +255,6 @@ window.updateReviewDate = async function(id, newDate) {
         
         if (!response.ok) throw new Error("Ошибка сервера");
         
-        // Обновляем локальный массив и пересортировываем
         const review = currentReviews.find(r => r._id === id);
         if (review) review.createdAt = new Date(newDate).toISOString();
         

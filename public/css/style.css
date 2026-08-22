@@ -101,7 +101,6 @@ body { background-color: var(--color-bg); color: var(--color-text-main); font-fa
 .review-author { font-weight: 700; color: var(--color-primary); font-size: 1.05rem; display: block; }
 .review-date { font-size: 0.8rem; color: var(--color-text-muted); margin-top: 2px; }
 
-/* 🔥 Стиль для инпута даты в админке */
 .admin-date-input { border: 1px dashed transparent; background: transparent; font-family: var(--font-body); font-size: 0.8rem; color: var(--color-text-muted); cursor: pointer; padding: 2px 4px; border-radius: 4px; margin-top: 2px; outline: none; margin-left: -4px; transition: var(--transition); }
 .admin-date-input:hover { border-color: var(--color-accent); background: rgba(197, 160, 89, 0.05); }
 .admin-date-input:focus { border-style: solid; border-color: var(--color-accent); background: #fff; }
@@ -161,7 +160,14 @@ body.admin-mode .admin-only { display: block; }
 
 .project-case-layout { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 40px; }
 .case-media { display: flex; flex-direction: column; min-width: 0; align-self: flex-start; gap: 16px; }
-.case-main-image { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; display: block; background: #E5E7EB; border-radius: var(--radius-sm); }
+
+.case-main-image-wrapper { position: relative; width: 100%; border-radius: var(--radius-sm); overflow: hidden; background: #E5E7EB; }
+.case-main-image { width: 100%; height: auto; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.slider-btn { position: absolute; top: 50%; transform: translateY(-50%); background: rgba(255, 255, 255, 0.8); border: none; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; color: var(--color-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: var(--transition); z-index: 10; box-shadow: var(--shadow-soft); }
+.slider-btn:hover { background: var(--color-accent); color: #fff; }
+.prev-btn { left: 16px; }
+.next-btn { right: 16px; }
+
 .case-gallery { display: flex; flex-wrap: wrap; gap: 10px; padding: 0; background: transparent; }
 .gallery-thumb { width: calc(20% - 8px); aspect-ratio: 4/3; object-fit: cover; border-radius: 6px; cursor: pointer; opacity: 0.6; transition: var(--transition); border: 2px solid transparent; }
 .gallery-thumb:hover { opacity: 1; border-color: var(--color-accent); transform: translateY(-2px); }
@@ -219,4 +225,8 @@ body.admin-mode .admin-only { display: block; }
     
     .project-case-layout { grid-template-columns: 1fr; gap: 20px; }
     .gallery-thumb { width: calc(33.333% - 7px); }
+    
+    .slider-btn { width: 36px; height: 36px; font-size: 1rem; }
+    .prev-btn { left: 8px; }
+    .next-btn { right: 8px; }
 }
