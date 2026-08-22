@@ -125,19 +125,31 @@ app.get('/api/reviews', async (req, res) => {
 
 app.post('/api/reviews', async (req, res) => {
     try {
-        const { name, contact, text, date } = req.body;
+        const { name, contact, text } = req.body;
         if (!name || !contact || !text) return res.status(400).json({ error: 'Invalid data' });
         
-        const reviewData = { name, contact, text };
-        if (date) {
-            reviewData.createdAt = new Date(date);
-        }
-
-        const newReview = new Review(reviewData);
+        const newReview = new Review({ name, contact, text });
         await newReview.save();
         res.status(201).json(newReview);
     } catch (error) {
         res.status(500).json({ error: 'Save Error' });
+    }
+});
+
+// 🔥 НОВЫЙ МАРШРУТ: Обновление даты отзыва напрямую
+app.put('/api/reviews/:id', async (req, res) => {
+    try {
+        const { password, date } = req.body;
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
+        
+        const updatedReview = await Review.findByIdAndUpdate(
+            req.params.id, 
+            { createdAt: new Date(date) },
+            { new: true }
+        );
+        res.status(200).json(updatedReview);
+    } catch (error) {
+        res.status(500).json({ error: 'Update Error' });
     }
 });
 

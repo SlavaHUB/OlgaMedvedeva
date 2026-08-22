@@ -4,7 +4,9 @@ let adminPassword = "";
 let isAdminLoggedIn = false;
 
 let currentReviewPage = 1;
-const reviewsPerPage = 5;
+const reviewsPerPage = 5; 
+
+let closeModalTimer; 
 
 const modalBackdrop = document.getElementById('modalBackdrop');
 modalBackdrop.addEventListener('click', function (event) {
@@ -16,11 +18,15 @@ const modalBody = document.getElementById('modalBody');
 const modalFooter = document.getElementById('modalFooter');
 
 function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
+    clearTimeout(closeModalTimer);
+    
     modalTitle.innerText = title;
     modalBody.innerHTML = bodyHtml;
     modalFooter.innerHTML = footerButtonsHtml;
+    
     if (isLarge) modalWindowBox.classList.add('large-modal');
     else modalWindowBox.classList.remove('large-modal');
+    
     document.body.style.overflow = 'hidden';
     setTimeout(() => modalBackdrop.classList.add('active'), 15);
 }
@@ -28,7 +34,11 @@ function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
 function closeModal() {
     modalBackdrop.classList.remove('active');
     document.body.style.overflow = '';
-    setTimeout(() => modalBody.innerHTML = '', 350);
+    
+    closeModalTimer = setTimeout(() => {
+        modalBody.innerHTML = '';
+        modalFooter.innerHTML = '';
+    }, 350);
 }
 
 function showToast(message, type = 'success') {
@@ -125,20 +135,31 @@ window.openProjectDetails = function (id) {
 function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
     grid.innerHTML = '';
-
+    
     const totalPages = Math.ceil(currentReviews.length / reviewsPerPage) || 1;
     if (currentReviewPage > totalPages) currentReviewPage = totalPages;
-
+    
     const start = (currentReviewPage - 1) * reviewsPerPage;
     const end = start + reviewsPerPage;
     const pageReviews = currentReviews.slice(start, end);
 
     pageReviews.forEach((rev) => {
-        const date = rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('ru-RU') : 'Недавно';
+        const rawDate = rev.createdAt ? new Date(rev.createdAt) : new Date();
+        const displayDate = rawDate.toLocaleDateString('ru-RU');
         const initial = rev.name.charAt(0).toUpperCase();
 
-        const adminContactHtml = (isAdminLoggedIn && rev.contact)
-            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>`
+        // 🔥 Если админ, вместо текста рисуем <input type="date">
+        let dateHtml = `<div class="review-date">${displayDate}</div>`;
+        if (isAdminLoggedIn) {
+            const yyyy = rawDate.getFullYear();
+            const mm = String(rawDate.getMonth() + 1).padStart(2, '0');
+            const dd = String(rawDate.getDate()).padStart(2, '0');
+            const inputVal = `${yyyy}-${mm}-${dd}`;
+            dateHtml = `<input type="date" class="admin-date-input" value="${inputVal}" onchange="updateReviewDate('${rev._id}', this.value)" title="Кликните для изменения даты">`;
+        }
+
+        const adminContactHtml = (isAdminLoggedIn && rev.contact) 
+            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>` 
             : '';
 
         const card = document.createElement('div');
@@ -149,7 +170,7 @@ function renderReviews() {
                     <div class="review-avatar">${initial}</div>
                     <div>
                         <span class="review-author">${escapeHtml(rev.name)}</span>
-                        <div class="review-date">${date}</div>
+                        ${dateHtml}
                         ${adminContactHtml}
                     </div>
                 </div>
@@ -164,7 +185,7 @@ function renderReviews() {
     addCard.className = 'review-card add-review-card';
     addCard.onclick = openReviewModal;
     addCard.innerHTML = `
-        <h4>Здесь может быть ваш отзыв</h4>
+        <h4>Здесь может быть твой отзыв</h4>
         <button class="btn btn-secondary">Оставить отзыв</button>
     `;
     grid.appendChild(addCard);
@@ -188,16 +209,40 @@ function renderReviewPagination(totalPages) {
         const btn = document.createElement('button');
         btn.className = `page-btn ${i === currentReviewPage ? 'active' : ''}`;
         btn.innerText = i;
-        btn.onclick = () => {
-            currentReviewPage = i;
-            renderReviews();
+        btn.onclick = () => { 
+            currentReviewPage = i; 
+            renderReviews(); 
             document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' });
         };
         paginationContainer.appendChild(btn);
     }
 }
 
-window.openReviewModal = function () {
+// 🔥 НОВАЯ ФУНКЦИЯ: Обновление даты при изменении в инпуте
+window.updateReviewDate = async function(id, newDate) {
+    try {
+        const response = await fetch(`/api/reviews/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: adminPassword, date: newDate })
+        });
+        
+        if (!response.ok) throw new Error("Ошибка сервера");
+        
+        // Обновляем локальный массив и пересортировываем
+        const review = currentReviews.find(r => r._id === id);
+        if (review) review.createdAt = new Date(newDate).toISOString();
+        
+        currentReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        renderReviews();
+        
+        showToast("Дата отзыва изменена!");
+    } catch (error) {
+        showToast("Ошибка изменения даты", "error");
+    }
+}
+
+window.openReviewModal = function() {
     const formHtml = `
         <form id="modalReviewForm" novalidate style="margin-top: 10px;">
             <div class="form-group">
@@ -222,7 +267,7 @@ window.openReviewModal = function () {
     openModal("Оставить свой отзыв", formHtml, footerHtml);
 }
 
-window.submitModalReview = async function () {
+window.submitModalReview = async function() {
     const name = document.getElementById('mRevName').value.trim();
     const contactInput = document.getElementById('mRevContact');
     const contact = contactInput.value.trim();
@@ -230,26 +275,33 @@ window.submitModalReview = async function () {
     const contactError = document.getElementById('mContactError');
     const submitBtn = document.getElementById('modalRevSubmitBtn');
 
-    if (!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
+    if(!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
     if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
-
+    
     contactError.classList.remove('active');
     submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
 
     try {
-        const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, text }) });
+        const response = await fetch('/api/reviews', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ name, contact, text }) 
+        });
         if (!response.ok) throw new Error("Ошибка");
+        
         const savedReview = await response.json();
-        currentReviews.unshift(savedReview);
-        currentReviewPage = 1;
-        renderReviews();
-        closeModal();
+        currentReviews.unshift(savedReview); 
+        currentReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        
+        currentReviewPage = 1; 
+        renderReviews(); 
+        closeModal(); 
         showToast("Отзыв успешно опубликован!");
-    } catch (error) {
-        showToast("Ошибка при публикации", "error");
+    } catch (error) { 
+        showToast("Ошибка при публикации", "error"); 
         submitBtn.disabled = false; submitBtn.innerText = 'Отправить';
     }
 }
@@ -291,7 +343,7 @@ async function handleAddWork() {
     const title = document.getElementById('workTitleInput').value.trim() || 'Проект без названия';
     const task = document.getElementById('workTaskInput').value.trim();
     const solution = document.getElementById('workSolutionInput').value.trim();
-
+    
     const areaVal = document.getElementById('workAreaInput').value.trim();
     const area = areaVal ? `${areaVal} ${document.getElementById('workAreaUnit').value}` : '';
     const durVal = document.getElementById('workDurationInput').value.trim();
@@ -320,7 +372,7 @@ async function handleAddWork() {
             formData.append('title', title); formData.append('area', area);
             formData.append('duration', duration); formData.append('budget', budget);
             formData.append('task', task); formData.append('solution', solution);
-
+            
             for (let i = 0; i < fileInput.files.length; i++) {
                 const compressedFile = await compressImage(fileInput.files[i], 1200, 0.8);
                 formData.append('images', compressedFile);
@@ -330,17 +382,17 @@ async function handleAddWork() {
 
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Ошибка сервера");
-
+        
         currentPortfolio.unshift(result);
         renderPortfolio();
-
+        
         document.getElementById('workMainImageInput').value = ''; document.getElementById('workFileInput').value = '';
         document.getElementById('workTitleInput').value = ''; document.getElementById('workAreaInput').value = '';
         document.getElementById('workDurationInput').value = ''; document.getElementById('workBudgetInput').value = '';
         document.getElementById('workTaskInput').value = ''; document.getElementById('workSolutionInput').value = '';
-
+        
         showToast("Проект успешно опубликован!");
-    } catch (err) { showToast(err.message, "error"); }
+    } catch (err) { showToast(err.message, "error"); } 
     finally { btn.innerText = 'Опубликовать проект'; btn.disabled = false; }
 }
 
