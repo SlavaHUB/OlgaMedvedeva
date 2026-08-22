@@ -13,11 +13,11 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'))); 
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('✅ Успешное подключение к MongoDB Atlas'))
-    .catch(err => console.error('❌ Ошибка подключения к БД:', err));
+    .then(() => console.log('Connected to MongoDB'))
+    .catch(err => console.error('DB Connection Error:', err));
 
 const workSchema = new mongoose.Schema({
     title: { type: String, default: 'Дизайн-проект' },
@@ -57,8 +57,11 @@ const storage = new CloudinaryStorage({
 const upload = multer({ storage: storage });
 
 app.post('/api/verify-password', (req, res) => {
-    if (req.body.password === process.env.ADMIN_PASSWORD) res.status(200).json({ success: true });
-    else res.status(403).json({ error: 'Неверный пароль' });
+    if (req.body.password === process.env.ADMIN_PASSWORD) {
+        res.status(200).json({ success: true });
+    } else {
+        res.status(403).json({ error: 'Access Denied' });
+    }
 });
 
 app.get('/api/portfolio', async (req, res) => {
@@ -66,83 +69,82 @@ app.get('/api/portfolio', async (req, res) => {
         const works = await Work.find().sort({ createdAt: -1 });
         res.json(works);
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка сервера' });
+        res.status(500).json({ error: 'Server Error' });
     }
 });
 
 app.post('/api/portfolio/url', async (req, res) => {
     try {
         const { password, title, mainImage, area, duration, budget, task, solution } = req.body;
-        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
 
-        const newWork = new Work({
-            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution
+        const newWork = new Work({ 
+            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution 
         });
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка сохранения' });
+        res.status(500).json({ error: 'Save Error' });
     }
 });
 
 app.post('/api/portfolio/file', upload.array('images', 10), async (req, res) => {
     try {
         const { password, title, area, duration, budget, task, solution } = req.body;
-        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
-        if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'Файлы не загружены' });
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
+        if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
 
-        const mainImage = req.files[0].path;
-        const gallery = req.files.map(file => file.path);
+        const mainImage = req.files[0].path; 
+        const gallery = req.files.map(file => file.path); 
 
-        const newWork = new Work({
-            title, mainImage, gallery, area, duration, budget, task, solution
-        });
+        const newWork = new Work({ 
+            title, mainImage, gallery, area, duration, budget, task, solution 
+        }); 
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка загрузки файла' });
+        res.status(500).json({ error: 'Upload Error' });
     }
 });
 
 app.delete('/api/portfolio/:id', async (req, res) => {
     try {
-        if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
+        if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
         await Work.findByIdAndDelete(req.params.id);
         res.status(200).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка удаления' });
+        res.status(500).json({ error: 'Delete Error' });
     }
 });
 
 app.get('/api/reviews', async (req, res) => {
     try {
-        // 🔥 Убрали ограничение полей, теперь сервер возвращает все данные, включая контакт
         const reviews = await Review.find().sort({ createdAt: -1 });
         res.json(reviews);
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка сервера' });
+        res.status(500).json({ error: 'Server Error' });
     }
 });
 
 app.post('/api/reviews', async (req, res) => {
     try {
         const { name, contact, text } = req.body;
-        if (!name || !contact || !text) return res.status(400).json({ error: 'Заполните все поля' });
+        if (!name || !contact || !text) return res.status(400).json({ error: 'Invalid data' });
         const newReview = new Review({ name, contact, text });
         await newReview.save();
         res.status(201).json({ _id: newReview._id, name: newReview.name, text: newReview.text });
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка сохранения отзыва' });
+        res.status(500).json({ error: 'Save Error' });
     }
 });
 
 app.delete('/api/reviews/:id', async (req, res) => {
     try {
-        if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Доступ запрещен' });
+        if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
         await Review.findByIdAndDelete(req.params.id);
         res.status(200).json({ success: true });
     } catch (error) {
-        res.status(500).json({ error: 'Ошибка удаления' });
+        res.status(500).json({ error: 'Delete Error' });
     }
 });
 
@@ -151,5 +153,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`🚀 Сервер запущен на порту ${PORT}`);
+    console.log(`Server is running on port ${PORT}`);
 });

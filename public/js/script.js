@@ -4,7 +4,7 @@ let adminPassword = "";
 let isAdminLoggedIn = false;
 
 let currentReviewPage = 1;
-const reviewsPerPage = 5; 
+const reviewsPerPage = 5;
 
 const modalBackdrop = document.getElementById('modalBackdrop');
 modalBackdrop.addEventListener('click', function (event) {
@@ -125,10 +125,10 @@ window.openProjectDetails = function (id) {
 function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
     grid.innerHTML = '';
-    
+
     const totalPages = Math.ceil(currentReviews.length / reviewsPerPage) || 1;
     if (currentReviewPage > totalPages) currentReviewPage = totalPages;
-    
+
     const start = (currentReviewPage - 1) * reviewsPerPage;
     const end = start + reviewsPerPage;
     const pageReviews = currentReviews.slice(start, end);
@@ -137,9 +137,8 @@ function renderReviews() {
         const date = rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('ru-RU') : 'Недавно';
         const initial = rev.name.charAt(0).toUpperCase();
 
-        // 🔥 Выводим номер телефона ТОЛЬКО если админ вошел
-        const adminContactHtml = (isAdminLoggedIn && rev.contact) 
-            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>` 
+        const adminContactHtml = (isAdminLoggedIn && rev.contact)
+            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>`
             : '';
 
         const card = document.createElement('div');
@@ -189,16 +188,16 @@ function renderReviewPagination(totalPages) {
         const btn = document.createElement('button');
         btn.className = `page-btn ${i === currentReviewPage ? 'active' : ''}`;
         btn.innerText = i;
-        btn.onclick = () => { 
-            currentReviewPage = i; 
-            renderReviews(); 
+        btn.onclick = () => {
+            currentReviewPage = i;
+            renderReviews();
             document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' });
         };
         paginationContainer.appendChild(btn);
     }
 }
 
-window.openReviewModal = function() {
+window.openReviewModal = function () {
     const formHtml = `
         <form id="modalReviewForm" novalidate style="margin-top: 10px;">
             <div class="form-group">
@@ -223,7 +222,7 @@ window.openReviewModal = function() {
     openModal("Оставить свой отзыв", formHtml, footerHtml);
 }
 
-window.submitModalReview = async function() {
+window.submitModalReview = async function () {
     const name = document.getElementById('mRevName').value.trim();
     const contactInput = document.getElementById('mRevContact');
     const contact = contactInput.value.trim();
@@ -231,12 +230,12 @@ window.submitModalReview = async function() {
     const contactError = document.getElementById('mContactError');
     const submitBtn = document.getElementById('modalRevSubmitBtn');
 
-    if(!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
+    if (!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
     if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
-    
+
     contactError.classList.remove('active');
     submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
 
@@ -244,13 +243,13 @@ window.submitModalReview = async function() {
         const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, text }) });
         if (!response.ok) throw new Error("Ошибка");
         const savedReview = await response.json();
-        currentReviews.unshift(savedReview); 
-        currentReviewPage = 1; 
-        renderReviews(); 
-        closeModal(); 
+        currentReviews.unshift(savedReview);
+        currentReviewPage = 1;
+        renderReviews();
+        closeModal();
         showToast("Отзыв успешно опубликован!");
-    } catch (error) { 
-        showToast("Ошибка при публикации", "error"); 
+    } catch (error) {
+        showToast("Ошибка при публикации", "error");
         submitBtn.disabled = false; submitBtn.innerText = 'Отправить';
     }
 }
@@ -292,7 +291,7 @@ async function handleAddWork() {
     const title = document.getElementById('workTitleInput').value.trim() || 'Проект без названия';
     const task = document.getElementById('workTaskInput').value.trim();
     const solution = document.getElementById('workSolutionInput').value.trim();
-    
+
     const areaVal = document.getElementById('workAreaInput').value.trim();
     const area = areaVal ? `${areaVal} ${document.getElementById('workAreaUnit').value}` : '';
     const durVal = document.getElementById('workDurationInput').value.trim();
@@ -321,7 +320,7 @@ async function handleAddWork() {
             formData.append('title', title); formData.append('area', area);
             formData.append('duration', duration); formData.append('budget', budget);
             formData.append('task', task); formData.append('solution', solution);
-            
+
             for (let i = 0; i < fileInput.files.length; i++) {
                 const compressedFile = await compressImage(fileInput.files[i], 1200, 0.8);
                 formData.append('images', compressedFile);
@@ -331,17 +330,17 @@ async function handleAddWork() {
 
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Ошибка сервера");
-        
+
         currentPortfolio.unshift(result);
         renderPortfolio();
-        
+
         document.getElementById('workMainImageInput').value = ''; document.getElementById('workFileInput').value = '';
         document.getElementById('workTitleInput').value = ''; document.getElementById('workAreaInput').value = '';
         document.getElementById('workDurationInput').value = ''; document.getElementById('workBudgetInput').value = '';
         document.getElementById('workTaskInput').value = ''; document.getElementById('workSolutionInput').value = '';
-        
+
         showToast("Проект успешно опубликован!");
-    } catch (err) { showToast(err.message, "error"); } 
+    } catch (err) { showToast(err.message, "error"); }
     finally { btn.innerText = 'Опубликовать проект'; btn.disabled = false; }
 }
 
