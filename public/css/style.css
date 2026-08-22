@@ -325,17 +325,14 @@ body {
 }
 
 /* СТРОГИЕ ИКОНКИ В ПРЕМИАЛЬНОМ СТИЛЕ */
-.service-icon {
-    font-size: 1.6rem;
-    margin-bottom: 20px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 50px;
-    height: 50px;
-    background: rgba(197, 160, 89, 0.12);
-    /* Аккуратный золотистый фон */
-    border-radius: 12px;
+.service-img {
+    width: 100%;
+    height: 140px;
+    /* Зафиксируем высоту, чтобы все карточки были ровными */
+    object-fit: contain;
+    /* Картинка масштабируется без обрезки */
+    object-position: center;
+    margin-bottom: 24px;
 }
 
 .service-card h3 {
