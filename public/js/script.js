@@ -3,12 +3,14 @@ let currentReviews = [];
 let adminPassword = "";
 let isAdminLoggedIn = false;
 
+// Логика пагинации отзывов
+let currentReviewPage = 1;
+const reviewsPerPage = 5; // Показываем 5 отзывов + 1 кнопка "Оставить отзыв" = 6 блоков
+
 // УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ
 const modalBackdrop = document.getElementById('modalBackdrop');
 modalBackdrop.addEventListener('click', function (event) {
-    if (event.target === modalBackdrop) {
-        closeModal();
-    }
+    if (event.target === modalBackdrop) closeModal();
 });
 const modalWindowBox = document.getElementById('modalWindowBox');
 const modalTitle = document.getElementById('modalTitle');
@@ -19,10 +21,8 @@ function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     modalTitle.innerText = title;
     modalBody.innerHTML = bodyHtml;
     modalFooter.innerHTML = footerButtonsHtml;
-
     if (isLarge) modalWindowBox.classList.add('large-modal');
     else modalWindowBox.classList.remove('large-modal');
-
     document.body.style.overflow = 'hidden';
     setTimeout(() => modalBackdrop.classList.add('active'), 15);
 }
@@ -68,6 +68,7 @@ async function loadData() {
     }
 }
 
+// ПОРТФОЛИО
 function renderPortfolio() {
     const grid = document.getElementById('portfolioGrid');
     grid.innerHTML = '';
@@ -98,7 +99,6 @@ window.openProjectDetails = function (id) {
 
     let galleryHtml = '';
     if (gallery.length > 1) {
-        // 🔥 ФИКС: При клике на миниатюру меняем картинку И плавно скроллим модалку в самый верх!
         galleryHtml = gallery.map(img => `
             <img src="${img}" class="gallery-thumb" alt="thumb"
             onclick="document.getElementById('modalMainImage').src='${img}'; document.getElementById('modalBody').scrollTo({top: 0, behavior: 'smooth'});">
@@ -127,18 +127,138 @@ window.openProjectDetails = function (id) {
     openModal(project.title || 'Детали проекта', html, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
 }
 
+// ОТЗЫВЫ И ПАГИНАЦИЯ
 function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
     grid.innerHTML = '';
-    currentReviews.forEach((rev) => {
+    
+    // Рассчитываем пагинацию
+    const totalPages = Math.ceil(currentReviews.length / reviewsPerPage) || 1;
+    if (currentReviewPage > totalPages) currentReviewPage = totalPages;
+    
+    const start = (currentReviewPage - 1) * reviewsPerPage;
+    const end = start + reviewsPerPage;
+    const pageReviews = currentReviews.slice(start, end);
+
+    // Рисуем отзывы
+    pageReviews.forEach((rev) => {
+        // Форматируем дату и берем первую букву имени для круглой аватарки
+        const date = rev.createdAt ? new Date(rev.createdAt).toLocaleDateString('ru-RU') : 'Недавно';
+        const initial = rev.name.charAt(0).toUpperCase();
+
         const card = document.createElement('div');
         card.className = 'review-card';
         card.innerHTML = `
-            <div class="review-header"><span class="review-author">${escapeHtml(rev.name)}</span>${isAdminLoggedIn ? `<button class="review-delete-btn admin-only" onclick="confirmDeleteReview('${rev._id}')">Удалить</button>` : ''}</div>
+            <div class="review-header">
+                <div class="review-author-wrap">
+                    <div class="review-avatar">${initial}</div>
+                    <div>
+                        <span class="review-author">${escapeHtml(rev.name)}</span>
+                        <div class="review-date">${date}</div>
+                    </div>
+                </div>
+                ${isAdminLoggedIn ? `<button class="review-delete-btn admin-only" onclick="confirmDeleteReview('${rev._id}')">Удалить</button>` : ''}
+            </div>
             <p class="review-text">«${escapeHtml(rev.text)}»</p>
         `;
         grid.appendChild(card);
     });
+
+    // Рисуем карточку "Оставить отзыв" в самом конце грида
+    const addCard = document.createElement('div');
+    addCard.className = 'review-card add-review-card';
+    addCard.onclick = openReviewModal;
+    addCard.innerHTML = `
+        <h4>Здесь может быть твой отзыв</h4>
+        <button class="btn btn-secondary">Оставить отзыв</button>
+    `;
+    grid.appendChild(addCard);
+
+    renderReviewPagination(totalPages);
+}
+
+function renderReviewPagination(totalPages) {
+    let paginationContainer = document.getElementById('reviewPagination');
+    if (!paginationContainer) {
+        paginationContainer = document.createElement('div');
+        paginationContainer.id = 'reviewPagination';
+        paginationContainer.className = 'pagination';
+        document.getElementById('reviews').querySelector('.container').appendChild(paginationContainer);
+    }
+    paginationContainer.innerHTML = '';
+
+    if (totalPages <= 1) return; // Прячем кнопки, если страниц нет
+
+    for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement('button');
+        btn.className = `page-btn ${i === currentReviewPage ? 'active' : ''}`;
+        btn.innerText = i;
+        btn.onclick = () => { 
+            currentReviewPage = i; 
+            renderReviews(); 
+            // Прокрутка к началу секции отзывов при смене страницы
+            document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' });
+        };
+        paginationContainer.appendChild(btn);
+    }
+}
+
+// МОДАЛКА ДЛЯ ФОРМЫ ОТЗЫВА
+window.openReviewModal = function() {
+    const formHtml = `
+        <form id="modalReviewForm" novalidate style="margin-top: 10px;">
+            <div class="form-group">
+                <label>Ваше имя *</label>
+                <input type="text" id="mRevName" placeholder="Например, Анна" required>
+            </div>
+            <div class="form-group">
+                <label>Email или номер телефона *</label>
+                <input type="text" id="mRevContact" placeholder="+7 (999) 000-00-00" required>
+                <span class="error-text" id="mContactError">Укажите корректный телефон или email</span>
+            </div>
+            <div class="form-group">
+                <label>Ваш отзыв *</label>
+                <textarea id="mRevText" rows="4" placeholder="Расскажите о впечатлениях..." required></textarea>
+            </div>
+        </form>
+    `;
+    const footerHtml = `
+        <button class="btn btn-secondary" onclick="closeModal()">Отмена</button>
+        <button class="btn btn-primary" onclick="submitModalReview()" id="modalRevSubmitBtn">Отправить</button>
+    `;
+    openModal("Оставить свой отзыв", formHtml, footerHtml);
+}
+
+window.submitModalReview = async function() {
+    const name = document.getElementById('mRevName').value.trim();
+    const contactInput = document.getElementById('mRevContact');
+    const contact = contactInput.value.trim();
+    const text = document.getElementById('mRevText').value.trim();
+    const contactError = document.getElementById('mContactError');
+    const submitBtn = document.getElementById('modalRevSubmitBtn');
+
+    if(!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
+    if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
+    
+    contactError.classList.remove('active');
+    submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
+
+    try {
+        const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, text }) });
+        if (!response.ok) throw new Error("Ошибка");
+        const savedReview = await response.json();
+        currentReviews.unshift(savedReview); 
+        currentReviewPage = 1; // Перебрасываем на первую страницу, чтобы показать новый отзыв
+        renderReviews(); 
+        closeModal(); 
+        showToast("Отзыв успешно опубликован!");
+    } catch (error) { 
+        showToast("Ошибка при публикации", "error"); 
+        submitBtn.disabled = false; submitBtn.innerText = 'Отправить';
+    }
 }
 
 function toggleUploadMode() {
@@ -274,31 +394,6 @@ async function verifyAdminPassword() {
         } else showToast("Неверный пароль", "error");
     } catch (err) { showToast("Ошибка связи", "error"); }
 }
-
-// ФОРМА ОТЗЫВОВ
-document.getElementById('reviewForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const name = document.getElementById('revName').value.trim();
-    const contactInput = document.getElementById('revContact');
-    const contact = contactInput.value.trim();
-    const text = document.getElementById('revText').value.trim();
-    const contactError = document.getElementById('contactError');
-    const submitBtn = e.target.querySelector('button[type="submit"]');
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
-    if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
-    contactError.classList.remove('active');
-    submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
-
-    try {
-        const response = await fetch('/api/reviews', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name, contact, text }) });
-        if (!response.ok) throw new Error("Ошибка");
-        const savedReview = await response.json();
-        currentReviews.unshift(savedReview); renderReviews(); e.target.reset(); showToast("Отзыв опубликован!");
-    } catch (error) { showToast("Ошибка", "error"); }
-    finally { submitBtn.disabled = false; submitBtn.innerText = 'Опубликовать отзыв'; }
-});
 
 // БУРГЕР МЕНЮ
 const burgerBtn = document.getElementById('burgerBtn');
