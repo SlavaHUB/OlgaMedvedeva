@@ -86,6 +86,11 @@ body {
     transition: transform 0.4s ease;
 }
 
+/* Прячем бургер-меню на ПК */
+.burger-btn {
+    display: none;
+}
+
 .logo-text {
     font-family: 'Caveat', cursive;
     font-size: 2.2rem;
@@ -900,66 +905,215 @@ body.admin-mode .admin-only {
 /* АДАПТИВ ПОД МОБИЛЬНЫЕ УСТРОЙСТВА (ФИНАЛ)   */
 /* ========================================== */
 @media (max-width: 900px) {
-    /* 1. Навигация */
-    .nav-container { flex-direction: column; gap: 14px; padding: 16px 0; }
-    .nav-menu { 
-        display: flex; 
-        width: 100%; 
-        overflow-x: auto; 
-        padding: 0 16px 8px 16px; /* Перенесли отступы внутрь скролла */
-        justify-content: flex-start; /* ФИКС: Левый край больше не обрезается */
-        gap: 8px; 
-        -webkit-overflow-scrolling: touch;
+
+    /* 1. Навигация и Бургер-меню */
+    .nav-container {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        position: relative;
+        /* Важно для выпадающего меню */
     }
-    .nav-menu::-webkit-scrollbar { display: none; } 
-    
-    /* ЖЕСТКО УРАВНИВАЕМ ВСЕ ПУНКТЫ МЕНЮ И КНОПКУ КОНТАКТЫ */
-    .nav-menu a, .nav-btn { 
-        white-space: nowrap !important; 
-        font-size: 0.95rem !important; 
-        font-weight: 500 !important;
-        padding: 8px 14px !important; 
-        background: rgba(197, 160, 89, 0.1) !important; 
-        border-radius: 8px !important; 
+
+    /* Стилизуем кнопку из трех палочек */
+    .burger-btn {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 4px;
+        z-index: 100;
+    }
+
+    .burger-btn span {
+        display: block;
+        width: 30px;
+        height: 3px;
+        background: var(--color-primary);
+        border-radius: 3px;
+        transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* Анимация превращения в крестик */
+    .burger-btn.active span:nth-child(1) {
+        transform: translateY(9px) rotate(45deg);
+    }
+
+    .burger-btn.active span:nth-child(2) {
+        opacity: 0;
+    }
+
+    .burger-btn.active span:nth-child(3) {
+        transform: translateY(-9px) rotate(-45deg);
+    }
+
+    /* Выпадающее меню */
+    .nav-menu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(12px);
+        flex-direction: column;
+        padding: 10px 24px 24px 24px;
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.08);
+        border-top: 1px solid var(--color-border);
+        /* Скрываем по умолчанию */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-15px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Показываем меню */
+    .nav-menu.active {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .nav-menu li {
+        width: 100%;
+        text-align: center;
+    }
+
+    .nav-menu a {
+        display: block;
+        padding: 14px 0 !important;
+        font-size: 1.1rem !important;
+        background: transparent !important;
+        border-radius: 0 !important;
+        border-bottom: 1px solid var(--color-border);
+        /* Разделители пунктов */
+    }
+
+    .nav-menu li:last-child a {
+        border-bottom: none;
+    }
+
+    .nav-menu a::after {
+        display: none;
+    }
+
+    /* Кнопка контакты в меню */
+    .nav-btn {
+        background: var(--color-accent) !important;
+        color: #fff !important;
+        border-radius: var(--radius-sm) !important;
+        margin-top: 12px;
         border: none !important;
-        color: var(--color-text-main) !important;
-        box-shadow: none !important;
-        transform: none !important;
-        height: auto !important;
-        line-height: normal !important;
     }
-    .nav-menu a::after { display: none; } 
 
     /* 2. Главный экран */
-    .hero-section { padding: 40px 0; }
-    .hero-container { grid-template-columns: 1fr; text-align: center; gap: 30px; }
-    .hero-content h1 { font-size: 2.2rem; }
-    .hero-actions { justify-content: center; flex-direction: column; }
-    .hero-actions .btn { width: 100%; }
-    .hero-media { order: -1; max-width: 100%; }
-    
-    .section-title h2 { font-size: 1.8rem; }
-    .services-section, .portfolio-section, .reviews-section { padding: 50px 0; }
+    .hero-section {
+        padding: 40px 0;
+    }
+
+    .hero-container {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 30px;
+    }
+
+    .hero-content h1 {
+        font-size: 2.2rem;
+    }
+
+    .hero-actions {
+        justify-content: center;
+        flex-direction: column;
+    }
+
+    .hero-actions .btn {
+        width: 100%;
+    }
+
+    .hero-media {
+        order: -1;
+        max-width: 100%;
+    }
+
+    .section-title h2 {
+        font-size: 1.8rem;
+    }
+
+    .services-section,
+    .portfolio-section,
+    .reviews-section {
+        padding: 50px 0;
+    }
 
     /* 3. Сетки */
-    .services-grid, .portfolio-grid, .reviews-grid { grid-template-columns: 1fr; gap: 20px; }
-    .container { padding: 0 16px; }
+    .services-grid,
+    .portfolio-grid,
+    .reviews-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .container {
+        padding: 0 16px;
+    }
 
     /* 4. Админка */
-    .admin-grid-inputs > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
-    .upload-type-toggle { flex-direction: column; gap: 12px; }
-    .form-row { grid-template-columns: 1fr; }
-    .review-form-wrapper { padding: 24px 16px; }
+    .admin-grid-inputs>div[style*="grid-template-columns"] {
+        grid-template-columns: 1fr !important;
+    }
+
+    .upload-type-toggle {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .review-form-wrapper {
+        padding: 24px 16px;
+    }
 
     /* 5. Модалка */
-    .modal-backdrop { padding: 10px; height: 100dvh; }
-    .modal-window.large-modal { max-height: calc(100dvh - 20px); }
-    .modal-window.large-modal .modal-body { padding: 16px; }
-    .modal-header { padding: 16px; }
-    .modal-header h3 { font-size: 1.2rem; }
-    .modal-footer { padding: 12px 16px; justify-content: center; }
-    .modal-footer .btn { width: 100%; }
-    
-    .project-case-layout { grid-template-columns: 1fr; gap: 20px; }
-    .gallery-thumb { width: calc(33.333% - 7px); } 
+    .modal-backdrop {
+        padding: 10px;
+        height: 100dvh;
+    }
+
+    .modal-window.large-modal {
+        max-height: calc(100dvh - 20px);
+    }
+
+    .modal-window.large-modal .modal-body {
+        padding: 16px;
+    }
+
+    .modal-header {
+        padding: 16px;
+    }
+
+    .modal-header h3 {
+        font-size: 1.2rem;
+    }
+
+    .modal-footer {
+        padding: 12px 16px;
+        justify-content: center;
+    }
+
+    .modal-footer .btn {
+        width: 100%;
+    }
+
+    .project-case-layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .gallery-thumb {
+        width: calc(33.333% - 7px);
+    }
 }

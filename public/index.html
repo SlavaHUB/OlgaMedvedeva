@@ -36,15 +36,23 @@
     <!-- ========================================== -->
     <header class="header">
         <nav class="nav-container">
-            <!-- Новый рукописный логотип -->
-            <!-- Новый логотип с иконкой и текстом -->
+            <!-- Логотип -->
             <a href="#" class="logo">
                 <img src="img/logo.svg" alt="OM Design" class="nav-logo-icon">
                 <div class="logo-text">
                     Ольга Медведева<span>Дизайн интерьеров</span>
                 </div>
             </a>
-            <ul class="nav-menu">
+
+            <!-- Кнопка бургер-меню (видна только на телефоне) -->
+            <button class="burger-btn" id="burgerBtn">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <!-- Навигация -->
+            <ul class="nav-menu" id="navMenu">
                 <li><a href="#about">Обо мне</a></li>
                 <li><a href="#services">Услуги</a></li>
                 <li><a href="#portfolio">Проекты</a></li>

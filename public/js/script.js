@@ -346,5 +346,26 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
     finally { submitBtn.disabled = false; submitBtn.innerText = 'Опубликовать отзыв'; }
 });
 
+// ==========================================
+// БУРГЕР МЕНЮ ДЛЯ МОБИЛЬНОЙ ВЕРСИИ
+// ==========================================
+const burgerBtn = document.getElementById('burgerBtn');
+const navMenu = document.getElementById('navMenu');
+
+if (burgerBtn && navMenu) {
+    burgerBtn.addEventListener('click', () => {
+        burgerBtn.classList.toggle('active');
+        navMenu.classList.toggle('active');
+    });
+
+    // Автоматически закрываем меню при клике на любую ссылку
+    const navLinks = navMenu.querySelectorAll('a');
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            burgerBtn.classList.remove('active');
+            navMenu.classList.remove('active');
+        });
+    });
+}
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadData);
 else loadData();
