@@ -3,9 +3,9 @@ let currentReviews = [];
 let adminPassword = "";
 let isAdminLoggedIn = false;
 
+// УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ
 const modalBackdrop = document.getElementById('modalBackdrop');
 modalBackdrop.addEventListener('click', function (event) {
-    // Проверяем, что клик был именно по фону, а не внутри самой белой карточки
     if (event.target === modalBackdrop) {
         closeModal();
     }
@@ -15,9 +15,6 @@ const modalTitle = document.getElementById('modalTitle');
 const modalBody = document.getElementById('modalBody');
 const modalFooter = document.getElementById('modalFooter');
 
-// ==========================================
-// БЛОК: УПРАВЛЕНИЕ МОДАЛЬНЫМ ОКНОМ
-// ==========================================
 function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     modalTitle.innerText = title;
     modalBody.innerHTML = bodyHtml;
@@ -26,23 +23,17 @@ function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     if (isLarge) modalWindowBox.classList.add('large-modal');
     else modalWindowBox.classList.remove('large-modal');
 
-    // БЛОКИРУЕМ СКРОЛЛ ФОНОВОГО САЙТА
     document.body.style.overflow = 'hidden';
-
-    setTimeout(() => {
-        modalBackdrop.classList.add('active');
-    }, 15);
+    setTimeout(() => modalBackdrop.classList.add('active'), 15);
 }
 
 function closeModal() {
     modalBackdrop.classList.remove('active');
-
-    // ВОЗВРАЩАЕМ СКРОЛЛ САЙТУ ПРИ ЗАКРЫТИИ
     document.body.style.overflow = '';
-
     setTimeout(() => modalBody.innerHTML = '', 350);
 }
 
+// УВЕДОМЛЕНИЯ
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
     const toast = document.createElement('div');
@@ -61,6 +52,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ЗАГРУЗКА И РЕНДЕР ДАННЫХ
 async function loadData() {
     try {
         const [portfolioRes, reviewsRes] = await Promise.all([
@@ -79,7 +71,6 @@ async function loadData() {
 function renderPortfolio() {
     const grid = document.getElementById('portfolioGrid');
     grid.innerHTML = '';
-
     currentPortfolio.forEach((work) => {
         const displayTitle = work.title || work.desc || 'Проект';
         const displayImg = work.mainImage || work.url;
@@ -107,7 +98,11 @@ window.openProjectDetails = function (id) {
 
     let galleryHtml = '';
     if (gallery.length > 1) {
-        galleryHtml = gallery.map(img => `<img src="${img}" class="gallery-thumb" onclick="document.getElementById('modalMainImage').src='${img}'" alt="thumb">`).join('');
+        // 🔥 ФИКС: При клике на миниатюру меняем картинку И плавно скроллим модалку в самый верх!
+        galleryHtml = gallery.map(img => `
+            <img src="${img}" class="gallery-thumb" alt="thumb"
+            onclick="document.getElementById('modalMainImage').src='${img}'; document.getElementById('modalBody').scrollTo({top: 0, behavior: 'smooth'});">
+        `).join('');
     }
 
     let statsHtml = '';
@@ -152,7 +147,7 @@ function toggleUploadMode() {
     document.getElementById('fileInputGroup').style.display = isUrl ? 'none' : 'block';
 }
 
-// === МАГИЯ АВТО-СЖАТИЯ ФОТОГРАФИЙ (Canvas API) ===
+// СЖАТИЕ ФОТО
 async function compressImage(file, maxWidth = 1200, quality = 0.8) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -164,52 +159,34 @@ async function compressImage(file, maxWidth = 1200, quality = 0.8) {
                 const canvas = document.createElement('canvas');
                 let width = img.width;
                 let height = img.height;
-
-                if (width > maxWidth) {
-                    height = Math.round((height * maxWidth) / width);
-                    width = maxWidth;
-                }
-                canvas.width = width;
-                canvas.height = height;
-
+                if (width > maxWidth) { height = Math.round((height * maxWidth) / width); width = maxWidth; }
+                canvas.width = width; canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-
                 canvas.toBlob((blob) => {
-                    const compressedFile = new File([blob], file.name, {
-                        type: 'image/jpeg',
-                        lastModified: Date.now(),
-                    });
-                    resolve(compressedFile);
+                    resolve(new File([blob], file.name, { type: 'image/jpeg', lastModified: Date.now() }));
                 }, 'image/jpeg', quality);
             };
-            img.onerror = (error) => reject(error);
+            img.onerror = error => reject(error);
         };
-        reader.onerror = (error) => reject(error);
+        reader.onerror = error => reject(error);
     });
 }
 
+// ДОБАВЛЕНИЕ ПРОЕКТА
 async function handleAddWork() {
     const uploadType = document.querySelector('input[name="uploadType"]:checked').value;
     const btn = document.getElementById('uploadWorkBtn');
-
-    // Сбор текста
     const title = document.getElementById('workTitleInput').value.trim() || 'Проект без названия';
     const task = document.getElementById('workTaskInput').value.trim();
     const solution = document.getElementById('workSolutionInput').value.trim();
-
-    // Склейка цифр с выбранными единицами измерения
+    
     const areaVal = document.getElementById('workAreaInput').value.trim();
-    const areaUnit = document.getElementById('workAreaUnit').value;
-    const area = areaVal ? `${areaVal} ${areaUnit}` : '';
-
+    const area = areaVal ? `${areaVal} ${document.getElementById('workAreaUnit').value}` : '';
     const durVal = document.getElementById('workDurationInput').value.trim();
-    const durUnit = document.getElementById('workDurationUnit').value;
-    const duration = durVal ? `${durVal} ${durUnit}` : '';
-
+    const duration = durVal ? `${durVal} ${document.getElementById('workDurationUnit').value}` : '';
     const budVal = document.getElementById('workBudgetInput').value.trim();
-    const budUnit = document.getElementById('workBudgetUnit').value;
-    const budget = budVal ? `${budVal} ${budUnit}` : '';
+    const budget = budVal ? `${budVal} ${document.getElementById('workBudgetUnit').value}` : '';
 
     btn.innerText = 'Сжатие фото и загрузка...';
     btn.disabled = true;
@@ -219,7 +196,6 @@ async function handleAddWork() {
         if (uploadType === 'url') {
             const mainImage = document.getElementById('workMainImageInput').value.trim();
             if (!mainImage) throw new Error("Введите ссылку на фото");
-
             response = await fetch('/api/portfolio/url', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -228,57 +204,37 @@ async function handleAddWork() {
         } else {
             const fileInput = document.getElementById('workFileInput');
             if (fileInput.files.length === 0) throw new Error("Выберите хотя бы один файл");
-
             const formData = new FormData();
             formData.append('password', adminPassword);
-            formData.append('title', title);
-            formData.append('area', area);
-            formData.append('duration', duration);
-            formData.append('budget', budget);
-            formData.append('task', task);
-            formData.append('solution', solution);
-
-            // Прогоняем каждый файл через компрессор перед отправкой
+            formData.append('title', title); formData.append('area', area);
+            formData.append('duration', duration); formData.append('budget', budget);
+            formData.append('task', task); formData.append('solution', solution);
+            
             for (let i = 0; i < fileInput.files.length; i++) {
-                const originalFile = fileInput.files[i];
-                const compressedFile = await compressImage(originalFile, 1200, 0.8);
+                const compressedFile = await compressImage(fileInput.files[i], 1200, 0.8);
                 formData.append('images', compressedFile);
             }
-
-            response = await fetch('/api/portfolio/file', {
-                method: 'POST',
-                body: formData
-            });
+            response = await fetch('/api/portfolio/file', { method: 'POST', body: formData });
         }
 
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Ошибка сервера");
-
+        
         currentPortfolio.unshift(result);
         renderPortfolio();
-
-        // Очистка
-        document.getElementById('workMainImageInput').value = '';
-        document.getElementById('workFileInput').value = '';
-        document.getElementById('workTitleInput').value = '';
-        document.getElementById('workAreaInput').value = '';
-        document.getElementById('workDurationInput').value = '';
-        document.getElementById('workBudgetInput').value = '';
-        document.getElementById('workTaskInput').value = '';
-        document.getElementById('workSolutionInput').value = '';
-
+        
+        document.getElementById('workMainImageInput').value = ''; document.getElementById('workFileInput').value = '';
+        document.getElementById('workTitleInput').value = ''; document.getElementById('workAreaInput').value = '';
+        document.getElementById('workDurationInput').value = ''; document.getElementById('workBudgetInput').value = '';
+        document.getElementById('workTaskInput').value = ''; document.getElementById('workSolutionInput').value = '';
+        
         showToast("Проект успешно опубликован!");
-    } catch (err) {
-        showToast(err.message, "error");
-    } finally {
-        btn.innerText = 'Опубликовать проект';
-        btn.disabled = false;
-    }
+    } catch (err) { showToast(err.message, "error"); } 
+    finally { btn.innerText = 'Опубликовать проект'; btn.disabled = false; }
 }
 
-function confirmDeleteWork(id) {
-    openModal("Удаление проекта", "<p>Точно удалить эту работу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteWork('${id}')">Удалить</button>`);
-}
+// УДАЛЕНИЕ
+function confirmDeleteWork(id) { openModal("Удаление проекта", "<p>Точно удалить эту работу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteWork('${id}')">Удалить</button>`); }
 async function executeDeleteWork(id) {
     try {
         const response = await fetch(`/api/portfolio/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword }) });
@@ -288,9 +244,7 @@ async function executeDeleteWork(id) {
     } catch (error) { showToast(error.message, "error"); }
 }
 
-function confirmDeleteReview(id) {
-    openModal("Удаление отзыва", "<p>Удалить отзыв?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteReview('${id}')">Удалить</button>`);
-}
+function confirmDeleteReview(id) { openModal("Удаление отзыва", "<p>Удалить отзыв?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteReview('${id}')">Удалить</button>`); }
 async function executeDeleteReview(id) {
     try {
         const response = await fetch(`/api/reviews/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword }) });
@@ -300,6 +254,7 @@ async function executeDeleteReview(id) {
     } catch (error) { showToast(error.message, "error"); }
 }
 
+// АДМИНКА
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey && e.shiftKey && e.code === 'KeyA') {
         e.preventDefault();
@@ -315,13 +270,12 @@ async function verifyAdminPassword() {
         if (response.ok) {
             adminPassword = inputPass; isAdminLoggedIn = true; document.body.classList.add('admin-mode');
             renderPortfolio(); renderReviews(); closeModal(); showToast("Доступ открыт!");
-
             toggleUploadMode();
-
         } else showToast("Неверный пароль", "error");
     } catch (err) { showToast("Ошибка связи", "error"); }
 }
 
+// ФОРМА ОТЗЫВОВ
 document.getElementById('reviewForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const name = document.getElementById('revName').value.trim();
@@ -346,19 +300,14 @@ document.getElementById('reviewForm').addEventListener('submit', async (e) => {
     finally { submitBtn.disabled = false; submitBtn.innerText = 'Опубликовать отзыв'; }
 });
 
-// ==========================================
-// БУРГЕР МЕНЮ ДЛЯ МОБИЛЬНОЙ ВЕРСИИ
-// ==========================================
+// БУРГЕР МЕНЮ
 const burgerBtn = document.getElementById('burgerBtn');
 const navMenu = document.getElementById('navMenu');
-
 if (burgerBtn && navMenu) {
     burgerBtn.addEventListener('click', () => {
         burgerBtn.classList.toggle('active');
         navMenu.classList.toggle('active');
     });
-
-    // Автоматически закрываем меню при клике на любую ссылку
     const navLinks = navMenu.querySelectorAll('a');
     navLinks.forEach(link => {
         link.addEventListener('click', () => {
@@ -367,5 +316,7 @@ if (burgerBtn && navMenu) {
         });
     });
 }
+
+// ИНИЦИАЛИЗАЦИЯ
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', loadData);
 else loadData();
