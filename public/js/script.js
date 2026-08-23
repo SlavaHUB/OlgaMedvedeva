@@ -227,7 +227,7 @@ function renderReviews() {
     addCard.className = 'review-card add-review-card';
     addCard.onclick = openReviewModal;
     addCard.innerHTML = `
-        <h4>Здесь может быть твой отзыв</h4>
+        <h4>Здесь может быть ваш отзыв</h4>
         <button class="btn btn-secondary">Оставить отзыв</button>
     `;
     grid.appendChild(addCard);
