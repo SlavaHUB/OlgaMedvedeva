@@ -259,6 +259,7 @@ body {
     display: block;
     object-fit: cover;
     border-radius: inherit;
+    transform: scaleX(-1);
 }
 
 .section-title {
