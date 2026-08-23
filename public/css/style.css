@@ -494,17 +494,13 @@ body {
 
 .pricing-details-link {
     display: inline-block;
-    /* Сужает рамку ровно по размеру текста */
     margin-top: 20px;
     padding: 8px 20px;
-    /* Дает воздуху вокруг текста внутри рамки */
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--color-text-muted);
     border-radius: 50px;
-    /* Делает идеальный овал */
     border: 1px solid rgba(107, 114, 128, 0.25);
-    /* Мягкая, полупрозрачная нейтральная рамка */
     transition: var(--transition);
 }
 
