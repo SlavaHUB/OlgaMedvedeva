@@ -5,9 +5,9 @@ let adminPassword = "";
 let isAdminLoggedIn = false;
 
 let currentReviewPage = 1;
-const reviewsPerPage = 5; 
+const reviewsPerPage = 5;
 
-let closeModalTimer; 
+let closeModalTimer;
 
 let currentModalGallery = [];
 let currentModalImageIndex = 0;
@@ -23,14 +23,14 @@ const modalFooter = document.getElementById('modalFooter');
 
 function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
     clearTimeout(closeModalTimer);
-    
+
     modalTitle.innerText = title;
     modalBody.innerHTML = bodyHtml;
     modalFooter.innerHTML = footerButtonsHtml;
-    
+
     if (isLarge) modalWindowBox.classList.add('large-modal');
     else modalWindowBox.classList.remove('large-modal');
-    
+
     document.body.style.overflow = 'hidden';
     setTimeout(() => modalBackdrop.classList.add('active'), 15);
 }
@@ -38,7 +38,7 @@ function openModal(title, bodyHtml, footerButtonsHtml, isLarge = false) {
 function closeModal() {
     modalBackdrop.classList.remove('active');
     document.body.style.overflow = '';
-    
+
     closeModalTimer = setTimeout(() => {
         modalBody.innerHTML = '';
         modalFooter.innerHTML = '';
@@ -109,7 +109,7 @@ window.openProjectDetails = function (id) {
     const project = currentPortfolio.find(p => p._id === id);
     if (!project) return;
     const displayImg = project.mainImage || project.url;
-    
+
     currentModalGallery = project.gallery && project.gallery.length > 0 ? project.gallery : [displayImg];
     currentModalImageIndex = 0;
 
@@ -154,20 +154,20 @@ window.openProjectDetails = function (id) {
 
 function updateMainImageSmoothly(index) {
     const imgEl = document.getElementById('modalMainImage');
-    imgEl.style.opacity = '0.3'; 
+    imgEl.style.opacity = '0.3';
     setTimeout(() => {
         imgEl.src = currentModalGallery[index];
         imgEl.onload = () => imgEl.style.opacity = '1';
     }, 150);
 }
 
-window.setModalImage = function(index) {
+window.setModalImage = function (index) {
     currentModalImageIndex = index;
     updateMainImageSmoothly(currentModalImageIndex);
-    document.getElementById('modalBody').scrollTo({top: 0, behavior: 'smooth'});
+    document.getElementById('modalBody').scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-window.changeModalImage = function(step) {
+window.changeModalImage = function (step) {
     currentModalImageIndex += step;
     if (currentModalImageIndex < 0) currentModalImageIndex = currentModalGallery.length - 1;
     if (currentModalImageIndex >= currentModalGallery.length) currentModalImageIndex = 0;
@@ -178,10 +178,10 @@ function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
     if (!grid) return;
     grid.innerHTML = '';
-    
+
     const totalPages = Math.ceil(currentReviews.length / reviewsPerPage) || 1;
     if (currentReviewPage > totalPages) currentReviewPage = totalPages;
-    
+
     const start = (currentReviewPage - 1) * reviewsPerPage;
     const end = start + reviewsPerPage;
     const pageReviews = currentReviews.slice(start, end);
@@ -200,8 +200,8 @@ function renderReviews() {
             dateHtml = `<input type="date" class="admin-date-input" value="${inputVal}" onchange="updateReviewDate('${rev._id}', this.value)" title="Кликните для изменения даты">`;
         }
 
-        const adminContactHtml = (isAdminLoggedIn && rev.contact) 
-            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>` 
+        const adminContactHtml = (isAdminLoggedIn && rev.contact)
+            ? `<div class="admin-only" style="font-size: 0.85rem; color: var(--color-danger); margin-top: 4px; font-weight: 600;">📞 ${escapeHtml(rev.contact)}</div>`
             : '';
 
         const card = document.createElement('div');
@@ -251,9 +251,9 @@ function renderReviewPagination(totalPages) {
         const btn = document.createElement('button');
         btn.className = `page-btn ${i === currentReviewPage ? 'active' : ''}`;
         btn.innerText = i;
-        btn.onclick = () => { 
-            currentReviewPage = i; 
-            renderReviews(); 
+        btn.onclick = () => {
+            currentReviewPage = i;
+            renderReviews();
             document.getElementById('reviews').scrollIntoView({ behavior: 'smooth' });
         };
         paginationContainer.appendChild(btn);
@@ -278,7 +278,7 @@ function renderPackages() {
     });
 }
 
-window.openPackageDetails = function(id) {
+window.openPackageDetails = function (id) {
     const pkg = currentPackages.find(p => p._id === id);
     if (!pkg) return;
 
@@ -288,8 +288,8 @@ window.openPackageDetails = function(id) {
         .map(line => `<li>${escapeHtml(line.trim())}</li>`)
         .join('');
 
-    const linkHtml = pkg.projectLink 
-        ? `<div style="margin-top: 24px;"><a href="${escapeHtml(pkg.projectLink)}" target="_blank" class="btn btn-secondary" style="padding: 10px 24px; font-size: 0.9rem;">Посмотреть пример проекта</a></div>` 
+    const linkHtml = pkg.projectLink
+        ? `<div style="margin-top: 24px;"><a href="${escapeHtml(pkg.projectLink)}" target="_blank" class="btn btn-secondary" style="padding: 10px 24px; font-size: 0.9rem;">Посмотреть пример проекта</a></div>`
         : '';
 
     const html = `
@@ -303,29 +303,29 @@ window.openPackageDetails = function(id) {
     openModal(pkg.title, html, `<button class="btn btn-primary" onclick="closeModal()">Понятно</button>`);
 }
 
-window.updateReviewDate = async function(id, newDate) {
+window.updateReviewDate = async function (id, newDate) {
     try {
         const response = await fetch(`/api/reviews/${id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: adminPassword, date: newDate })
         });
-        
+
         if (!response.ok) throw new Error("Ошибка сервера");
-        
+
         const review = currentReviews.find(r => r._id === id);
         if (review) review.createdAt = new Date(newDate).toISOString();
-        
+
         currentReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         renderReviews();
-        
+
         showToast("Дата отзыва изменена!");
     } catch (error) {
         showToast("Ошибка изменения даты", "error");
     }
 }
 
-window.openReviewModal = function() {
+window.openReviewModal = function () {
     const formHtml = `
         <form id="modalReviewForm" novalidate style="margin-top: 10px;">
             <div class="form-group">
@@ -341,6 +341,9 @@ window.openReviewModal = function() {
                 <label>Ваш отзыв *</label>
                 <textarea id="mRevText" rows="4" placeholder="Расскажите о впечатлениях..." required></textarea>
             </div>
+            <div style="font-size: 0.75rem; color: #666; margin-top: 15px; text-align: center; line-height: 1.4;">
+                Нажимая на кнопку, вы даете согласие на обработку персональных данных и соглашаетесь с <a href="#" onclick="openPrivacyPolicy(event)" style="color: var(--color-accent); text-decoration: underline;">Политикой конфиденциальности</a>.
+            </div>
         </form>
     `;
     const footerHtml = `
@@ -349,8 +352,24 @@ window.openReviewModal = function() {
     `;
     openModal("Оставить свой отзыв", formHtml, footerHtml);
 }
+window.openPrivacyPolicy = function (e) {
+    if (e) e.preventDefault();
+    const policyHtml = `
+        <div style="font-size: 0.9rem; line-height: 1.6; color: #333; text-align: left;">
+            <p><strong>1. Общие положения</strong><br>Настоящая политика обработки персональных данных составлена в соответствии с требованиями Федерального закона от 27.07.2006. №152-ФЗ «О персональных данных» и определяет порядок обработки персональных данных и меры по обеспечению безопасности персональных данных Ольги Медведевой (далее – Оператор).</p>
+            <br><p><strong>2. Цели обработки персональных данных</strong><br>Цель обработки персональных данных Пользователя — информирование Пользователя посредством отправки электронных писем и телефонных звонков; заключение, исполнение и прекращение гражданско-правовых договоров; предоставление доступа Пользователю к сервисам, информации и/или материалам, содержащимся на веб-сайте.</p>
+            <br><p><strong>3. Объем собираемых данных</strong><br>Оператор может обрабатывать следующие персональные данные Пользователя:<br>
+            • Фамилия, имя, отчество;<br>
+            • Электронный адрес;<br>
+            • Номера телефонов.</p>
+            <br><p><strong>4. Передача данных третьим лицам</strong><br>Безопасность персональных данных, которые обрабатываются Оператором, обеспечивается путем реализации правовых, организационных и технических мер, необходимых для выполнения в полном объеме требований действующего законодательства в области защиты персональных данных. Оператор ни при каких условиях не передает персональные данные третьим лицам, за исключением случаев, связанных с исполнением действующего законодательства.</p>
+        </div>
+    `;
+    // Используем isLarge = true для широкого красивого окна
+    openModal("Политика конфиденциальности", policyHtml, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
+}
 
-window.submitModalReview = async function() {
+window.submitModalReview = async function () {
     const name = document.getElementById('mRevName').value.trim();
     const contactInput = document.getElementById('mRevContact');
     const contact = contactInput.value.trim();
@@ -358,33 +377,33 @@ window.submitModalReview = async function() {
     const contactError = document.getElementById('mContactError');
     const submitBtn = document.getElementById('modalRevSubmitBtn');
 
-    if(!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
+    if (!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
     if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
-    
+
     contactError.classList.remove('active');
     submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
 
     try {
-        const response = await fetch('/api/reviews', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ name, contact, text }) 
+        const response = await fetch('/api/reviews', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, contact, text })
         });
         if (!response.ok) throw new Error("Ошибка");
-        
+
         const savedReview = await response.json();
-        currentReviews.unshift(savedReview); 
+        currentReviews.unshift(savedReview);
         currentReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        currentReviewPage = 1; 
-        renderReviews(); 
-        closeModal(); 
+
+        currentReviewPage = 1;
+        renderReviews();
+        closeModal();
         showToast("Отзыв успешно опубликован!");
-    } catch (error) { 
-        showToast("Ошибка при публикации", "error"); 
+    } catch (error) {
+        showToast("Ошибка при публикации", "error");
         submitBtn.disabled = false; submitBtn.innerText = 'Отправить';
     }
 }
@@ -426,7 +445,7 @@ async function handleAddWork() {
     const title = document.getElementById('workTitleInput').value.trim() || 'Проект без названия';
     const task = document.getElementById('workTaskInput').value.trim();
     const solution = document.getElementById('workSolutionInput').value.trim();
-    
+
     const areaVal = document.getElementById('workAreaInput').value.trim();
     const area = areaVal ? `${areaVal} ${document.getElementById('workAreaUnit').value}` : '';
     const durVal = document.getElementById('workDurationInput').value.trim();
@@ -455,7 +474,7 @@ async function handleAddWork() {
             formData.append('title', title); formData.append('area', area);
             formData.append('duration', duration); formData.append('budget', budget);
             formData.append('task', task); formData.append('solution', solution);
-            
+
             for (let i = 0; i < fileInput.files.length; i++) {
                 const compressedFile = await compressImage(fileInput.files[i], 1200, 0.8);
                 formData.append('images', compressedFile);
@@ -465,21 +484,21 @@ async function handleAddWork() {
 
         const result = await response.json();
         if (!response.ok) throw new Error(result.error || "Ошибка сервера");
-        
+
         currentPortfolio.unshift(result);
         renderPortfolio();
-        
+
         document.getElementById('workMainImageInput').value = ''; document.getElementById('workFileInput').value = '';
         document.getElementById('workTitleInput').value = ''; document.getElementById('workAreaInput').value = '';
         document.getElementById('workDurationInput').value = ''; document.getElementById('workBudgetInput').value = '';
         document.getElementById('workTaskInput').value = ''; document.getElementById('workSolutionInput').value = '';
-        
+
         showToast("Проект успешно опубликован!");
-    } catch (err) { showToast(err.message, "error"); } 
+    } catch (err) { showToast(err.message, "error"); }
     finally { btn.innerText = 'Опубликовать проект'; btn.disabled = false; }
 }
 
-window.handleAddPackage = async function() {
+window.handleAddPackage = async function () {
     const title = document.getElementById('pkgTitleInput').value.trim();
     const price = document.getElementById('pkgPriceInput').value.trim();
     const includes = document.getElementById('pkgIncludesInput').value.trim();
@@ -514,11 +533,11 @@ window.handleAddPackage = async function() {
     }
 }
 
-window.confirmDeletePackage = function(id) {
+window.confirmDeletePackage = function (id) {
     openModal("Удаление услуги", "<p>Точно удалить эту услугу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeletePackage('${id}')">Удалить</button>`);
 }
 
-window.executeDeletePackage = async function(id) {
+window.executeDeletePackage = async function (id) {
     try {
         const response = await fetch(`/api/packages/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword }) });
         if (!response.ok) throw new Error("Ошибка");
