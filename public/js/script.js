@@ -282,10 +282,10 @@ window.openPackageDetails = function(id) {
     const pkg = currentPackages.find(p => p._id === id);
     if (!pkg) return;
 
-    const includesList = escapeHtml(pkg.includes)
+    const includesList = (pkg.includes || '')
         .split('\n')
         .filter(line => line.trim() !== '')
-        .map(line => `<li>${line}</li>`)
+        .map(line => `<li>${escapeHtml(line.trim())}</li>`)
         .join('');
 
     const html = `
