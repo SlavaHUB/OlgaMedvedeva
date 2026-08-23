@@ -13,10 +13,10 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(express.static(path.join(__dirname, 'public'))); 
+app.use(express.static(path.join(__dirname, 'public')));
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => {})
+    .then(() => { })
     .catch(err => console.error(err));
 
 const workSchema = new mongoose.Schema({
@@ -84,8 +84,8 @@ app.post('/api/portfolio/url', async (req, res) => {
         const { password, title, mainImage, area, duration, budget, task, solution } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
 
-        const newWork = new Work({ 
-            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution 
+        const newWork = new Work({
+            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution
         });
         await newWork.save();
         res.status(201).json(newWork);
@@ -100,12 +100,12 @@ app.post('/api/portfolio/file', upload.array('images', 10), async (req, res) => 
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
         if (!req.files || req.files.length === 0) return res.status(400).json({ error: 'No files uploaded' });
 
-        const mainImage = req.files[0].path; 
-        const gallery = req.files.map(file => file.path); 
+        const mainImage = req.files[0].path;
+        const gallery = req.files.map(file => file.path);
 
-        const newWork = new Work({ 
-            title, mainImage, gallery, area, duration, budget, task, solution 
-        }); 
+        const newWork = new Work({
+            title, mainImage, gallery, area, duration, budget, task, solution
+        });
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
@@ -136,7 +136,7 @@ app.post('/api/reviews', async (req, res) => {
     try {
         const { name, contact, text, date } = req.body;
         if (!name || !contact || !text) return res.status(400).json({ error: 'Invalid data' });
-        
+
         const reviewData = { name, contact, text };
         if (date) {
             reviewData.createdAt = new Date(date);
@@ -154,9 +154,9 @@ app.put('/api/reviews/:id', async (req, res) => {
     try {
         const { password, date } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
-        
+
         const updatedReview = await Review.findByIdAndUpdate(
-            req.params.id, 
+            req.params.id,
             { createdAt: new Date(date) },
             { new: true }
         );
@@ -213,4 +213,7 @@ app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {});
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+}
+module.exports = app;
