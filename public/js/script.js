@@ -271,7 +271,7 @@ function renderPackages() {
             ${isAdminLoggedIn ? `<button class="pricing-delete-btn admin-only" onclick="event.stopPropagation(); confirmDeletePackage('${pkg._id}')">Удалить</button>` : ''}
             <h3>${escapeHtml(pkg.title)}</h3>
             <div class="price">${escapeHtml(pkg.price)}</div>
-            <div class="pricing-details-link">Посмотреть что входит</div>
+            <div class="pricing-details-link">Детали услуги</div>
         `;
         card.onclick = () => openPackageDetails(pkg._id);
         grid.appendChild(card);
