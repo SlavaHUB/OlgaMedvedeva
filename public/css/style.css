@@ -493,16 +493,24 @@ body {
 }
 
 .pricing-details-link {
-    margin: 20px;
-    font-size: 0.9rem;
+    display: inline-block;
+    /* Сужает рамку ровно по размеру текста */
+    margin-top: 20px;
+    padding: 8px 20px;
+    /* Дает воздуху вокруг текста внутри рамки */
+    font-size: 0.85rem;
+    font-weight: 500;
     color: var(--color-text-muted);
-    border-radius: 25px;
-    border: 2px solid var(--color-text-muted);
+    border-radius: 50px;
+    /* Делает идеальный овал */
+    border: 1px solid rgba(107, 114, 128, 0.25);
+    /* Мягкая, полупрозрачная нейтральная рамка */
     transition: var(--transition);
 }
 
 .pricing-card:hover .pricing-details-link {
     color: var(--color-accent);
+    border: 1px solid var(--color-accent);
 }
 
 .pricing-delete-btn {
