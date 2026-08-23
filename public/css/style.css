@@ -493,10 +493,11 @@ body {
 }
 
 .pricing-details-link {
-    margin-top: 20px;
+    margin: 20px;
     font-size: 0.9rem;
     color: var(--color-text-muted);
-    text-decoration: underline;
+    border-radius: 25px;
+    border: 2px solid var(--color-text-muted);
     transition: var(--transition);
 }
 
