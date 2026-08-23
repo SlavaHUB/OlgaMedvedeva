@@ -288,11 +288,16 @@ window.openPackageDetails = function(id) {
         .map(line => `<li>${escapeHtml(line.trim())}</li>`)
         .join('');
 
+    const linkHtml = pkg.projectLink 
+        ? `<div style="margin-top: 24px;"><a href="${escapeHtml(pkg.projectLink)}" target="_blank" class="btn btn-secondary" style="padding: 10px 24px; font-size: 0.9rem;">Посмотреть пример проекта</a></div>` 
+        : '';
+
     const html = `
         <div class="package-modal-content">
             <div class="pkg-price">Стоимость: ${escapeHtml(pkg.price)}</div>
             <h4>Что входит в услугу:</h4>
             <ul>${includesList}</ul>
+            ${linkHtml}
         </div>
     `;
     openModal(pkg.title, html, `<button class="btn btn-primary" onclick="closeModal()">Понятно</button>`);
@@ -478,6 +483,7 @@ window.handleAddPackage = async function() {
     const title = document.getElementById('pkgTitleInput').value.trim();
     const price = document.getElementById('pkgPriceInput').value.trim();
     const includes = document.getElementById('pkgIncludesInput').value.trim();
+    const projectLink = document.getElementById('pkgLinkInput').value.trim();
 
     if (!title || !price || !includes) {
         showToast("Заполните все поля", "error");
@@ -488,7 +494,7 @@ window.handleAddPackage = async function() {
         const response = await fetch('/api/packages', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: adminPassword, title, price, includes })
+            body: JSON.stringify({ password: adminPassword, title, price, includes, projectLink })
         });
 
         if (!response.ok) throw new Error("Ошибка сервера");
@@ -500,6 +506,7 @@ window.handleAddPackage = async function() {
         document.getElementById('pkgTitleInput').value = '';
         document.getElementById('pkgPriceInput').value = '';
         document.getElementById('pkgIncludesInput').value = '';
+        document.getElementById('pkgLinkInput').value = '';
 
         showToast("Услуга добавлена!");
     } catch (error) {

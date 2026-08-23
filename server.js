@@ -44,6 +44,7 @@ const packageSchema = new mongoose.Schema({
     title: { type: String, required: true },
     price: { type: String, required: true },
     includes: { type: String, required: true },
+    projectLink: { type: String, default: '' },
     createdAt: { type: Date, default: Date.now }
 });
 const Package = mongoose.model('Package', packageSchema);
@@ -186,11 +187,11 @@ app.get('/api/packages', async (req, res) => {
 
 app.post('/api/packages', async (req, res) => {
     try {
-        const { password, title, price, includes } = req.body;
+        const { password, title, price, includes, projectLink } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
         if (!title || !price || !includes) return res.status(400).json({ error: 'Invalid data' });
 
-        const newPackage = new Package({ title, price, includes });
+        const newPackage = new Package({ title, price, includes, projectLink });
         await newPackage.save();
         res.status(201).json(newPackage);
     } catch (error) {
