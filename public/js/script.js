@@ -1,5 +1,6 @@
 let currentPortfolio = [];
 let currentReviews = [];
+let currentPackages = [];
 let adminPassword = "";
 let isAdminLoggedIn = false;
 
@@ -65,14 +66,17 @@ function escapeHtml(text) {
 
 async function loadData() {
     try {
-        const [portfolioRes, reviewsRes] = await Promise.all([
+        const [portfolioRes, reviewsRes, packagesRes] = await Promise.all([
             fetch('/api/portfolio'),
-            fetch('/api/reviews')
+            fetch('/api/reviews'),
+            fetch('/api/packages')
         ]);
         if (portfolioRes.ok) currentPortfolio = await portfolioRes.json();
         if (reviewsRes.ok) currentReviews = await reviewsRes.json();
+        if (packagesRes.ok) currentPackages = await packagesRes.json();
         renderPortfolio();
         renderReviews();
+        renderPackages();
     } catch (error) {
         showToast("Ошибка загрузки данных", "error");
     }
@@ -80,6 +84,7 @@ async function loadData() {
 
 function renderPortfolio() {
     const grid = document.getElementById('portfolioGrid');
+    if (!grid) return;
     grid.innerHTML = '';
     currentPortfolio.forEach((work) => {
         const displayTitle = work.title || work.desc || 'Проект';
@@ -171,6 +176,7 @@ window.changeModalImage = function(step) {
 
 function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
+    if (!grid) return;
     grid.innerHTML = '';
     
     const totalPages = Math.ceil(currentReviews.length / reviewsPerPage) || 1;
@@ -221,7 +227,7 @@ function renderReviews() {
     addCard.className = 'review-card add-review-card';
     addCard.onclick = openReviewModal;
     addCard.innerHTML = `
-        <h4>Здесь может быть ваш отзыв</h4>
+        <h4>Здесь может быть твой отзыв</h4>
         <button class="btn btn-secondary">Оставить отзыв</button>
     `;
     grid.appendChild(addCard);
@@ -252,6 +258,44 @@ function renderReviewPagination(totalPages) {
         };
         paginationContainer.appendChild(btn);
     }
+}
+
+function renderPackages() {
+    const grid = document.getElementById('packagesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    currentPackages.forEach((pkg) => {
+        const card = document.createElement('div');
+        card.className = 'pricing-card';
+        card.innerHTML = `
+            ${isAdminLoggedIn ? `<button class="pricing-delete-btn admin-only" onclick="event.stopPropagation(); confirmDeletePackage('${pkg._id}')">Удалить</button>` : ''}
+            <h3>${escapeHtml(pkg.title)}</h3>
+            <div class="price">${escapeHtml(pkg.price)}</div>
+            <div class="pricing-details-link">Посмотреть что входит</div>
+        `;
+        card.onclick = () => openPackageDetails(pkg._id);
+        grid.appendChild(card);
+    });
+}
+
+window.openPackageDetails = function(id) {
+    const pkg = currentPackages.find(p => p._id === id);
+    if (!pkg) return;
+
+    const includesList = escapeHtml(pkg.includes)
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => `<li>${line}</li>`)
+        .join('');
+
+    const html = `
+        <div class="package-modal-content">
+            <div class="pkg-price">Стоимость: ${escapeHtml(pkg.price)}</div>
+            <h4>Что входит в услугу:</h4>
+            <ul>${includesList}</ul>
+        </div>
+    `;
+    openModal(pkg.title, html, `<button class="btn btn-primary" onclick="closeModal()">Понятно</button>`);
 }
 
 window.updateReviewDate = async function(id, newDate) {
@@ -430,6 +474,56 @@ async function handleAddWork() {
     finally { btn.innerText = 'Опубликовать проект'; btn.disabled = false; }
 }
 
+window.handleAddPackage = async function() {
+    const title = document.getElementById('pkgTitleInput').value.trim();
+    const price = document.getElementById('pkgPriceInput').value.trim();
+    const includes = document.getElementById('pkgIncludesInput').value.trim();
+
+    if (!title || !price || !includes) {
+        showToast("Заполните все поля", "error");
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/packages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: adminPassword, title, price, includes })
+        });
+
+        if (!response.ok) throw new Error("Ошибка сервера");
+
+        const savedPkg = await response.json();
+        currentPackages.unshift(savedPkg);
+        renderPackages();
+
+        document.getElementById('pkgTitleInput').value = '';
+        document.getElementById('pkgPriceInput').value = '';
+        document.getElementById('pkgIncludesInput').value = '';
+
+        showToast("Услуга добавлена!");
+    } catch (error) {
+        showToast("Ошибка при добавлении", "error");
+    }
+}
+
+window.confirmDeletePackage = function(id) {
+    openModal("Удаление услуги", "<p>Точно удалить эту услугу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeletePackage('${id}')">Удалить</button>`);
+}
+
+window.executeDeletePackage = async function(id) {
+    try {
+        const response = await fetch(`/api/packages/${id}`, { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: adminPassword }) });
+        if (!response.ok) throw new Error("Ошибка");
+        currentPackages = currentPackages.filter(p => p._id !== id);
+        renderPackages();
+        closeModal();
+        showToast("Удалено");
+    } catch (error) {
+        showToast(error.message, "error");
+    }
+}
+
 function confirmDeleteWork(id) { openModal("Удаление проекта", "<p>Точно удалить эту работу?</p>", `<button class="btn btn-secondary" onclick="closeModal()">Отмена</button><button class="btn btn-danger" onclick="executeDeleteWork('${id}')">Удалить</button>`); }
 async function executeDeleteWork(id) {
     try {
@@ -464,7 +558,7 @@ async function verifyAdminPassword() {
         const response = await fetch('/api/verify-password', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: inputPass }) });
         if (response.ok) {
             adminPassword = inputPass; isAdminLoggedIn = true; document.body.classList.add('admin-mode');
-            renderPortfolio(); renderReviews(); closeModal(); showToast("Доступ открыт!");
+            renderPortfolio(); renderReviews(); renderPackages(); closeModal(); showToast("Доступ открыт!");
             toggleUploadMode();
         } else showToast("Неверный пароль", "error");
     } catch (err) { showToast("Ошибка связи", "error"); }

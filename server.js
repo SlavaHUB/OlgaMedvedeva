@@ -16,8 +16,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public'))); 
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => console.error('DB Connection Error:', err));
+    .then(() => {})
+    .catch(err => console.error(err));
 
 const workSchema = new mongoose.Schema({
     title: { type: String, default: 'Дизайн-проект' },
@@ -39,6 +39,14 @@ const reviewSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 const Review = mongoose.model('Review', reviewSchema);
+
+const packageSchema = new mongoose.Schema({
+    title: { type: String, required: true },
+    price: { type: String, required: true },
+    includes: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Package = mongoose.model('Package', packageSchema);
 
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -125,10 +133,15 @@ app.get('/api/reviews', async (req, res) => {
 
 app.post('/api/reviews', async (req, res) => {
     try {
-        const { name, contact, text } = req.body;
+        const { name, contact, text, date } = req.body;
         if (!name || !contact || !text) return res.status(400).json({ error: 'Invalid data' });
         
-        const newReview = new Review({ name, contact, text });
+        const reviewData = { name, contact, text };
+        if (date) {
+            reviewData.createdAt = new Date(date);
+        }
+
+        const newReview = new Review(reviewData);
         await newReview.save();
         res.status(201).json(newReview);
     } catch (error) {
@@ -136,7 +149,6 @@ app.post('/api/reviews', async (req, res) => {
     }
 });
 
-// 🔥 НОВЫЙ МАРШРУТ: Обновление даты отзыва напрямую
 app.put('/api/reviews/:id', async (req, res) => {
     try {
         const { password, date } = req.body;
@@ -163,10 +175,41 @@ app.delete('/api/reviews/:id', async (req, res) => {
     }
 });
 
+app.get('/api/packages', async (req, res) => {
+    try {
+        const packages = await Package.find().sort({ createdAt: -1 });
+        res.json(packages);
+    } catch (error) {
+        res.status(500).json({ error: 'Server Error' });
+    }
+});
+
+app.post('/api/packages', async (req, res) => {
+    try {
+        const { password, title, price, includes } = req.body;
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
+        if (!title || !price || !includes) return res.status(400).json({ error: 'Invalid data' });
+
+        const newPackage = new Package({ title, price, includes });
+        await newPackage.save();
+        res.status(201).json(newPackage);
+    } catch (error) {
+        res.status(500).json({ error: 'Save Error' });
+    }
+});
+
+app.delete('/api/packages/:id', async (req, res) => {
+    try {
+        if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
+        await Package.findByIdAndDelete(req.params.id);
+        res.status(200).json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: 'Delete Error' });
+    }
+});
+
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+app.listen(PORT, () => {});
