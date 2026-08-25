@@ -256,18 +256,7 @@
     </div>
     <div class="toast-container" id="toastContainer"></div>
 
-    <script>
-        (function () {
-            const version = Date.now();
-            const scripts = ['/js/script.js'];
-            scripts.forEach(function (file) {
-                const script = document.createElement('script');
-                script.src = file + '?v=' + version;
-                script.async = false;
-                document.body.appendChild(script);
-            });
-        })();
-    </script>
+    <script src="/js/script.js?v=2"></script>
 </body>
 
 </html>
