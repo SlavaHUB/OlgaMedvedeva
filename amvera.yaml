@@ -1,0 +1,15 @@
+meta:
+  environment: node
+  toolchain:
+    name: npm
+    version: 18
+
+build:
+  skip: false
+  additionalCommands: npm install
+
+run:
+  scriptName: index.js # Путь к вашему главному файлу запуска (например, server.js)
+  # Если у вас нет одного скрипта, используйте command
+  # command: npm start
+  containerPort: 80 # Порт, на котором работает ваше приложение (или 3000, 8080)
