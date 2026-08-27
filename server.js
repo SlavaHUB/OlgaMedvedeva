@@ -7,6 +7,7 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -66,7 +67,16 @@ const storage = new CloudinaryStorage({
 });
 const upload = multer({ storage: storage });
 
-app.post('/api/verify-password', (req, res) => {
+// Настройка защиты от брутфорса
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // Окно блокировки: 15 минут
+    max: 5, // Максимум 5 попыток
+    message: { error: 'Слишком много попыток входа. Пожалуйста, подождите 15 минут.' },
+    standardHeaders: true, 
+    legacyHeaders: false,
+});
+
+app.post('/api/verify-password', loginLimiter, (req, res) => {
     if (req.body.password === process.env.ADMIN_PASSWORD) res.status(200).json({ success: true });
     else res.status(403).json({ error: 'Access Denied' });
 });
