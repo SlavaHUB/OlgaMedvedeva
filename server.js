@@ -220,15 +220,18 @@ app.delete('/api/packages/:id', async (req, res) => {
     }
 });
 
+// Отдача статики
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
+// Глобальный обработчик ошибок (ПЕРЕД app.listen)
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
+});
+
+// Запуск сервера
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server is running on port ${PORT}`);
 });
