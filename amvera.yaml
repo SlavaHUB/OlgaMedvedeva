@@ -9,7 +9,6 @@ build:
   additionalCommands: npm install
 
 run:
-  scriptName: index.js # Путь к вашему главному файлу запуска (например, server.js)
-  # Если у вас нет одного скрипта, используйте command
-  # command: npm start
-  containerPort: 80 # Порт, на котором работает ваше приложение (или 3000, 8080)
+  # Запускаем через команду из package.json (например, node server.js)
+  command: npm start
+  containerPort: 80
