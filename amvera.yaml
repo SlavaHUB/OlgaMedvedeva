@@ -9,6 +9,5 @@ build:
   additionalCommands: npm install
 
 run:
-  # Запускаем через команду из package.json (например, node server.js)
   command: npm start
-  containerPort: 80
+  containerPort: 3000
