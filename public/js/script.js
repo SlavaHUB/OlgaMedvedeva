@@ -414,62 +414,6 @@ window.openPrivacyPolicy = function(e) {
 }
 
 
-window.openPrivacyPolicy = function(e) {
-    if (e) e.preventDefault();
-    const policyHtml = `
-        <div style="font-size: 0.9rem; line-height: 1.6; color: #333; text-align: left;">
-            <p><strong>1. Общие положения</strong><br>Настоящая политика обработки персональных данных составлена в соответствии с требованиями Федерального закона от 27.07.2006. №152-ФЗ «О персональных данных» и определяет порядок обработки персональных данных и меры по обеспечению безопасности персональных данных Ольги Медведевой (далее – Оператор).</p>
-            <br><p><strong>2. Цели обработки персональных данных</strong><br>Цель обработки персональных данных Пользователя — информирование Пользователя посредством отправки электронных писем и телефонных звонков; заключение, исполнение и прекращение гражданско-правовых договоров; предоставление доступа Пользователю к сервисам, информации и/или материалам, содержащимся на веб-сайте; сбор, обработка и публикация отзывов пользователей о работе сервиса, а также осуществление обратной связи с Пользователем по вопросам оставленных отзывов.</p>
-            <br><p><strong>3. Объем собираемых данных</strong><br>Оператор может обрабатывать следующие персональные данные Пользователя:<br>
-            • Имя (или Фамилия, Имя, Отчество при наличии);<br>
-            • Электронный адрес и/или номер телефона.</p>
-            <br><p><strong>4. Передача данных третьим лицам</strong><br>Безопасность персональных данных, которые обрабатываются Оператором, обеспечивается путем реализации правовых, организационных и технических мер, необходимых для выполнения в полном объеме требований действующего законодательства в области защиты персональных данных. Оператор ни при каких условиях не передает персональные данные третьим лицам, за исключением случаев, связанных с исполнением действующего законодательства.</p>
-        </div>
-    `;
-    openModal("Политика конфиденциальности", policyHtml, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
-}
-
-window.submitModalReview = async function() {
-    const name = document.getElementById('mRevName').value.trim();
-    const contactInput = document.getElementById('mRevContact');
-    const contact = contactInput.value.trim();
-    const text = document.getElementById('mRevText').value.trim();
-    const consent = document.getElementById('mRevConsent').checked;
-    const contactError = document.getElementById('mContactError');
-    const submitBtn = document.getElementById('modalRevSubmitBtn');
-
-    if (!consent) { showToast("Необходимо согласие на обработку данных", "error"); return; }
-    if(!name || !contact || !text) { showToast("Заполните все поля", "error"); return; }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const phoneRegex = /^(\+?\d{1,4}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?[\d\s.-]{7,10}$/;
-    if (!emailRegex.test(contact) && !phoneRegex.test(contact)) { contactError.classList.add('active'); contactInput.focus(); return; }
-    
-    contactError.classList.remove('active');
-    submitBtn.disabled = true; submitBtn.innerText = 'Отправка...';
-
-    try {
-        const response = await fetch('/api/reviews', { 
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' }, 
-            body: JSON.stringify({ name, contact, text }) 
-        });
-        if (!response.ok) throw new Error("Ошибка");
-        
-        const savedReview = await response.json();
-        currentReviews.unshift(savedReview); 
-        currentReviews.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-        
-        currentReviewPage = 1; 
-        renderReviews(); 
-        closeModal(); 
-        showToast("Отзыв успешно опубликован!");
-    } catch (error) { 
-        showToast("Ошибка при публикации", "error"); 
-        submitBtn.disabled = false; submitBtn.innerText = 'Отправить';
-    }
-}
-
 function toggleUploadMode() {
     const isUrl = document.querySelector('input[name="uploadType"]:checked').value === 'url';
     document.getElementById('urlInputGroup').style.display = isUrl ? 'block' : 'none';

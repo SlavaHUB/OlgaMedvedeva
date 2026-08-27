@@ -17,8 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => { })
-    .catch(err => console.error(err));
+    .then(() => console.log("DB Connected"))
+    .catch(err => { console.error("DB Connection Error:", err); process.exit(1); });
 
 const workSchema = new mongoose.Schema({
     title: { type: String, default: 'Дизайн-проект' },
@@ -216,4 +216,9 @@ app.use((req, res) => {
 
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
+});
+
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Something went wrong!' });
 });
