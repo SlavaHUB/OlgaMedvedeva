@@ -58,10 +58,15 @@ function showToast(message, type = 'success') {
     }, 3500);
 }
 
+// Обновленная функция: больше не ломает переносы строк и безопасно выводит текст
 function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.innerText = text || '';
-    return div.innerHTML;
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 async function loadData() {
@@ -153,7 +158,6 @@ window.openProjectDetails = function (id) {
 
     let footerHtml = `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`;
     
-    // НОВОЕ: Кнопка редактирования для админа
     if (isAdminLoggedIn) {
         footerHtml = `<button class="btn btn-secondary admin-only" onclick="editProject('${id}')" style="margin-right: auto; display: flex; align-items: center; gap: 6px;"><span>✎</span> Изменить текст</button>` + footerHtml;
     }
@@ -161,10 +165,13 @@ window.openProjectDetails = function (id) {
     openModal(project.title || 'Детали проекта', html, footerHtml, true);
 }
 
-// НОВОЕ: Режим редактирования проекта
 window.editProject = function(id) {
     const project = currentPortfolio.find(p => p._id === id);
     if (!project) return;
+
+    // Автоматическая очистка старых тегов <br> при открытии формы редактирования
+    const cleanTask = (project.task || '').replace(/<br\s*\/?>/gi, '\n');
+    const cleanSolution = (project.solution || '').replace(/<br\s*\/?>/gi, '\n');
 
     const formHtml = `
         <div class="form-group">
@@ -187,11 +194,11 @@ window.editProject = function(id) {
         </div>
         <div class="form-group">
             <label>Задача проекта</label>
-            <textarea id="eProjTask" rows="3">${escapeHtml(project.task || '')}</textarea>
+            <textarea id="eProjTask" rows="3">${escapeHtml(cleanTask)}</textarea>
         </div>
         <div class="form-group">
             <label>Реализация</label>
-            <textarea id="eProjSolution" rows="4">${escapeHtml(project.solution || '')}</textarea>
+            <textarea id="eProjSolution" rows="4">${escapeHtml(cleanSolution)}</textarea>
         </div>
         <p style="font-size: 0.85rem; color: #666; font-style: italic;">Примечание: Чтобы изменить фотографии, нужно удалить и пересоздать проект.</p>
     `;
@@ -308,7 +315,7 @@ function renderReviews() {
                 </div>
                 ${isAdminLoggedIn ? `<button class="review-delete-btn admin-only" onclick="confirmDeleteReview('${rev._id}')">Удалить</button>` : ''}
             </div>
-            <p class="review-text">«${escapeHtml(rev.text)}»</p>
+            <p class="review-text">«${escapeHtml(rev.text).replace(/\n/g, '<br>')}»</p>
         `;
         grid.appendChild(card);
     });
@@ -467,7 +474,9 @@ window.openPackageDetails = function (id) {
     const pkg = currentPackages.find(p => p._id === id);
     if (!pkg) return;
 
+    // Очищаем старые теги <br> перед разделением на пункты списка
     const includesList = (pkg.includes || '')
+        .replace(/<br\s*\/?>/gi, '\n')
         .split('\n')
         .filter(line => line.trim() !== '')
         .map(line => `<li>${escapeHtml(line.trim())}</li>`)
@@ -488,7 +497,6 @@ window.openPackageDetails = function (id) {
 
     let footerHtml = `<button class="btn btn-primary" onclick="closeModal()">Понятно</button>`;
     
-    // НОВОЕ: Кнопка редактирования для админа
     if (isAdminLoggedIn) {
         footerHtml = `<button class="btn btn-secondary admin-only" onclick="editPackage('${id}')" style="margin-right: auto; display: flex; align-items: center; gap: 6px;"><span>✎</span> Редактировать</button>` + footerHtml;
     }
@@ -496,10 +504,12 @@ window.openPackageDetails = function (id) {
     openModal(pkg.title, html, footerHtml);
 }
 
-// НОВОЕ: Режим редактирования услуги
 window.editPackage = function(id) {
     const pkg = currentPackages.find(p => p._id === id);
     if (!pkg) return;
+
+    // Автоматическая очистка старых тегов <br> при открытии формы редактирования
+    const cleanIncludes = (pkg.includes || '').replace(/<br\s*\/?>/gi, '\n');
 
     const formHtml = `
         <div class="form-group">
@@ -512,7 +522,7 @@ window.editPackage = function(id) {
         </div>
         <div class="form-group">
             <label>Что входит в услугу (каждый пункт с новой строки)</label>
-            <textarea id="ePkgIncludes" rows="6">${escapeHtml(pkg.includes)}</textarea>
+            <textarea id="ePkgIncludes" rows="6">${escapeHtml(cleanIncludes)}</textarea>
         </div>
         <div class="form-group">
             <label>Ссылка на пример (необязательно)</label>
