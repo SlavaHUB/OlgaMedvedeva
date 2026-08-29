@@ -69,8 +69,8 @@ const upload = multer({ storage: storage });
 
 // Настройка защиты от брутфорса
 const loginLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // Окно блокировки: 15 минут
-    max: 5, // Максимум 5 попыток
+    windowMs: 15 * 60 * 1000, 
+    max: 5, 
     message: { error: 'Слишком много попыток входа. Пожалуйста, подождите 15 минут.' },
     standardHeaders: true, 
     legacyHeaders: false,
@@ -81,6 +81,7 @@ app.post('/api/verify-password', loginLimiter, (req, res) => {
     else res.status(403).json({ error: 'Access Denied' });
 });
 
+/* ================= ПОРТФОЛИО ================= */
 app.get('/api/portfolio', async (req, res) => {
     try {
         const works = await Work.find().sort({ createdAt: -1 });
@@ -95,9 +96,7 @@ app.post('/api/portfolio/url', async (req, res) => {
         const { password, title, mainImage, area, duration, budget, task, solution } = req.body;
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
 
-        const newWork = new Work({
-            title, mainImage, gallery: [mainImage], area, duration, budget, task, solution
-        });
+        const newWork = new Work({ title, mainImage, gallery: [mainImage], area, duration, budget, task, solution });
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
@@ -114,13 +113,28 @@ app.post('/api/portfolio/file', upload.array('images', 10), async (req, res) => 
         const mainImage = req.files[0].path;
         const gallery = req.files.map(file => file.path);
 
-        const newWork = new Work({
-            title, mainImage, gallery, area, duration, budget, task, solution
-        });
+        const newWork = new Work({ title, mainImage, gallery, area, duration, budget, task, solution });
         await newWork.save();
         res.status(201).json(newWork);
     } catch (error) {
         res.status(500).json({ error: 'Upload Error' });
+    }
+});
+
+// НОВОЕ: Редактирование текста проекта
+app.put('/api/portfolio/:id', async (req, res) => {
+    try {
+        const { password, title, area, duration, budget, task, solution } = req.body;
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
+
+        const updatedWork = await Work.findByIdAndUpdate(
+            req.params.id,
+            { title, area, duration, budget, task, solution },
+            { new: true } 
+        );
+        res.status(200).json(updatedWork);
+    } catch (error) {
+        res.status(500).json({ error: 'Update Error' });
     }
 });
 
@@ -134,6 +148,7 @@ app.delete('/api/portfolio/:id', async (req, res) => {
     }
 });
 
+/* ================= ОТЗЫВЫ ================= */
 app.get('/api/reviews', async (req, res) => {
     try {
         const reviews = await Review.find().sort({ createdAt: -1 });
@@ -149,9 +164,7 @@ app.post('/api/reviews', async (req, res) => {
         if (!name || !contact || !text) return res.status(400).json({ error: 'Invalid data' });
 
         const reviewData = { name, contact, text };
-        if (date) {
-            reviewData.createdAt = new Date(date);
-        }
+        if (date) reviewData.createdAt = new Date(date);
 
         const newReview = new Review(reviewData);
         await newReview.save();
@@ -167,9 +180,7 @@ app.put('/api/reviews/:id', async (req, res) => {
         if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
 
         const updatedReview = await Review.findByIdAndUpdate(
-            req.params.id,
-            { createdAt: new Date(date) },
-            { new: true }
+            req.params.id, { createdAt: new Date(date) }, { new: true }
         );
         res.status(200).json(updatedReview);
     } catch (error) {
@@ -187,6 +198,7 @@ app.delete('/api/reviews/:id', async (req, res) => {
     }
 });
 
+/* ================= УСЛУГИ (ПАКЕТЫ) ================= */
 app.get('/api/packages', async (req, res) => {
     try {
         const packages = await Package.find().sort({ createdAt: -1 });
@@ -210,6 +222,23 @@ app.post('/api/packages', async (req, res) => {
     }
 });
 
+// НОВОЕ: Редактирование услуги
+app.put('/api/packages/:id', async (req, res) => {
+    try {
+        const { password, title, price, includes, projectLink } = req.body;
+        if (password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
+
+        const updatedPackage = await Package.findByIdAndUpdate(
+            req.params.id,
+            { title, price, includes, projectLink },
+            { new: true }
+        );
+        res.status(200).json(updatedPackage);
+    } catch (error) {
+        res.status(500).json({ error: 'Update Error' });
+    }
+});
+
 app.delete('/api/packages/:id', async (req, res) => {
     try {
         if (req.body.password !== process.env.ADMIN_PASSWORD) return res.status(403).json({ error: 'Access Denied' });
@@ -220,18 +249,16 @@ app.delete('/api/packages/:id', async (req, res) => {
     }
 });
 
-// Отдача статики
+/* ================= СИСТЕМА ================= */
 app.use((req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
-// Глобальный обработчик ошибок (ПЕРЕД app.listen)
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({ error: 'Something went wrong!' });
 });
 
-// Запуск сервера
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server is running on port ${PORT}`);
 });

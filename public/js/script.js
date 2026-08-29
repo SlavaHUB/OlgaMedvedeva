@@ -82,6 +82,7 @@ async function loadData() {
     }
 }
 
+/* ================= ПОРТФОЛИО ================= */
 function renderPortfolio() {
     const grid = document.getElementById('portfolioGrid');
     if (!grid) return;
@@ -149,7 +150,95 @@ window.openProjectDetails = function (id) {
             </div>
         </div>
     `;
-    openModal(project.title || 'Детали проекта', html, `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`, true);
+
+    let footerHtml = `<button class="btn btn-primary" onclick="closeModal()">Закрыть</button>`;
+    
+    // НОВОЕ: Кнопка редактирования для админа
+    if (isAdminLoggedIn) {
+        footerHtml = `<button class="btn btn-secondary admin-only" onclick="editProject('${id}')" style="margin-right: auto; display: flex; align-items: center; gap: 6px;"><span>✎</span> Изменить текст</button>` + footerHtml;
+    }
+
+    openModal(project.title || 'Детали проекта', html, footerHtml, true);
+}
+
+// НОВОЕ: Режим редактирования проекта
+window.editProject = function(id) {
+    const project = currentPortfolio.find(p => p._id === id);
+    if (!project) return;
+
+    const formHtml = `
+        <div class="form-group">
+            <label>Название проекта</label>
+            <input type="text" id="eProjTitle" value="${escapeHtml(project.title)}">
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 20px;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Площадь</label>
+                <input type="text" id="eProjArea" value="${escapeHtml(project.area || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Сроки</label>
+                <input type="text" id="eProjDuration" value="${escapeHtml(project.duration || '')}">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>Бюджет</label>
+                <input type="text" id="eProjBudget" value="${escapeHtml(project.budget || '')}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Задача проекта</label>
+            <textarea id="eProjTask" rows="3">${escapeHtml(project.task || '')}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Реализация</label>
+            <textarea id="eProjSolution" rows="4">${escapeHtml(project.solution || '')}</textarea>
+        </div>
+        <p style="font-size: 0.85rem; color: #666; font-style: italic;">Примечание: Чтобы изменить фотографии, нужно удалить и пересоздать проект.</p>
+    `;
+
+    const footerHtml = `
+        <button class="btn btn-secondary" onclick="openProjectDetails('${id}')">Отмена</button>
+        <button class="btn btn-primary" onclick="saveProjectEdit('${id}')" id="saveProjBtn">Сохранить изменения</button>
+    `;
+
+    document.getElementById('modalTitle').innerText = 'Редактирование проекта';
+    document.getElementById('modalBody').innerHTML = formHtml;
+    document.getElementById('modalFooter').innerHTML = footerHtml;
+}
+
+window.saveProjectEdit = async function(id) {
+    const title = document.getElementById('eProjTitle').value.trim();
+    const area = document.getElementById('eProjArea').value.trim();
+    const duration = document.getElementById('eProjDuration').value.trim();
+    const budget = document.getElementById('eProjBudget').value.trim();
+    const task = document.getElementById('eProjTask').value.trim();
+    const solution = document.getElementById('eProjSolution').value.trim();
+    const btn = document.getElementById('saveProjBtn');
+
+    btn.disabled = true;
+    btn.innerText = 'Сохранение...';
+
+    try {
+        const response = await fetch(`/api/portfolio/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: adminPassword, title, area, duration, budget, task, solution })
+        });
+
+        if (!response.ok) throw new Error("Ошибка сервера");
+
+        const updatedProject = await response.json();
+        const index = currentPortfolio.findIndex(p => p._id === id);
+        if (index !== -1) currentPortfolio[index] = updatedProject;
+
+        renderPortfolio();
+        openProjectDetails(id); 
+        showToast("Текст проекта обновлен!");
+    } catch (error) {
+        showToast("Ошибка при сохранении", "error");
+        btn.disabled = false;
+        btn.innerText = 'Сохранить изменения';
+    }
 }
 
 function updateMainImageSmoothly(index) {
@@ -174,6 +263,7 @@ window.changeModalImage = function (step) {
     updateMainImageSmoothly(currentModalImageIndex);
 }
 
+/* ================= ОТЗЫВЫ ================= */
 function renderReviews() {
     const grid = document.getElementById('reviewsGrid');
     if (!grid) return;
@@ -258,49 +348,6 @@ function renderReviewPagination(totalPages) {
         };
         paginationContainer.appendChild(btn);
     }
-}
-
-function renderPackages() {
-    const grid = document.getElementById('packagesGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    currentPackages.forEach((pkg) => {
-        const card = document.createElement('div');
-        card.className = 'pricing-card';
-        card.innerHTML = `
-            ${isAdminLoggedIn ? `<button class="pricing-delete-btn admin-only" onclick="event.stopPropagation(); confirmDeletePackage('${pkg._id}')">Удалить</button>` : ''}
-            <h3>${escapeHtml(pkg.title)}</h3>
-            <div class="price">${escapeHtml(pkg.price)}</div>
-            <div class="pricing-details-link">Детали услуги</div>
-        `;
-        card.onclick = () => openPackageDetails(pkg._id);
-        grid.appendChild(card);
-    });
-}
-
-window.openPackageDetails = function (id) {
-    const pkg = currentPackages.find(p => p._id === id);
-    if (!pkg) return;
-
-    const includesList = (pkg.includes || '')
-        .split('\n')
-        .filter(line => line.trim() !== '')
-        .map(line => `<li>${escapeHtml(line.trim())}</li>`)
-        .join('');
-
-    const linkHtml = pkg.projectLink
-        ? `<div style="margin-top: 24px;"><a href="${escapeHtml(pkg.projectLink)}" target="_blank" class="btn btn-secondary" style="padding: 10px 24px; font-size: 0.9rem;">Посмотреть пример проекта</a></div>`
-        : '';
-
-    const html = `
-        <div class="package-modal-content">
-            <div class="pkg-price">Стоимость: ${escapeHtml(pkg.price)}</div>
-            <h4>Что входит в услугу:</h4>
-            <ul>${includesList}</ul>
-            ${linkHtml}
-        </div>
-    `;
-    openModal(pkg.title, html, `<button class="btn btn-primary" onclick="closeModal()">Понятно</button>`);
 }
 
 window.updateReviewDate = async function (id, newDate) {
@@ -394,6 +441,130 @@ window.submitModalReview = async function() {
     } catch (error) { 
         showToast("Ошибка при публикации", "error"); 
         submitBtn.disabled = false; submitBtn.innerText = 'Отправить';
+    }
+}
+
+/* ================= УСЛУГИ (ПАКЕТЫ) ================= */
+function renderPackages() {
+    const grid = document.getElementById('packagesGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    currentPackages.forEach((pkg) => {
+        const card = document.createElement('div');
+        card.className = 'pricing-card';
+        card.innerHTML = `
+            ${isAdminLoggedIn ? `<button class="pricing-delete-btn admin-only" onclick="event.stopPropagation(); confirmDeletePackage('${pkg._id}')">Удалить</button>` : ''}
+            <h3>${escapeHtml(pkg.title)}</h3>
+            <div class="price">${escapeHtml(pkg.price)}</div>
+            <div class="pricing-details-link">Детали услуги</div>
+        `;
+        card.onclick = () => openPackageDetails(pkg._id);
+        grid.appendChild(card);
+    });
+}
+
+window.openPackageDetails = function (id) {
+    const pkg = currentPackages.find(p => p._id === id);
+    if (!pkg) return;
+
+    const includesList = (pkg.includes || '')
+        .split('\n')
+        .filter(line => line.trim() !== '')
+        .map(line => `<li>${escapeHtml(line.trim())}</li>`)
+        .join('');
+
+    const linkHtml = pkg.projectLink
+        ? `<div style="margin-top: 24px;"><a href="${escapeHtml(pkg.projectLink)}" target="_blank" class="btn btn-secondary" style="padding: 10px 24px; font-size: 0.9rem;">Посмотреть пример проекта</a></div>`
+        : '';
+
+    const html = `
+        <div class="package-modal-content">
+            <div class="pkg-price">Стоимость: ${escapeHtml(pkg.price)}</div>
+            <h4>Что входит в услугу:</h4>
+            <ul>${includesList}</ul>
+            ${linkHtml}
+        </div>
+    `;
+
+    let footerHtml = `<button class="btn btn-primary" onclick="closeModal()">Понятно</button>`;
+    
+    // НОВОЕ: Кнопка редактирования для админа
+    if (isAdminLoggedIn) {
+        footerHtml = `<button class="btn btn-secondary admin-only" onclick="editPackage('${id}')" style="margin-right: auto; display: flex; align-items: center; gap: 6px;"><span>✎</span> Редактировать</button>` + footerHtml;
+    }
+
+    openModal(pkg.title, html, footerHtml);
+}
+
+// НОВОЕ: Режим редактирования услуги
+window.editPackage = function(id) {
+    const pkg = currentPackages.find(p => p._id === id);
+    if (!pkg) return;
+
+    const formHtml = `
+        <div class="form-group">
+            <label>Название услуги</label>
+            <input type="text" id="ePkgTitle" value="${escapeHtml(pkg.title)}">
+        </div>
+        <div class="form-group">
+            <label>Стоимость</label>
+            <input type="text" id="ePkgPrice" value="${escapeHtml(pkg.price)}">
+        </div>
+        <div class="form-group">
+            <label>Что входит в услугу (каждый пункт с новой строки)</label>
+            <textarea id="ePkgIncludes" rows="6">${escapeHtml(pkg.includes)}</textarea>
+        </div>
+        <div class="form-group">
+            <label>Ссылка на пример (необязательно)</label>
+            <input type="url" id="ePkgLink" value="${escapeHtml(pkg.projectLink || '')}">
+        </div>
+    `;
+
+    const footerHtml = `
+        <button class="btn btn-secondary" onclick="openPackageDetails('${id}')">Отмена</button>
+        <button class="btn btn-primary" onclick="savePackageEdit('${id}')" id="savePkgBtn">Сохранить изменения</button>
+    `;
+
+    document.getElementById('modalTitle').innerText = 'Редактирование услуги';
+    document.getElementById('modalBody').innerHTML = formHtml;
+    document.getElementById('modalFooter').innerHTML = footerHtml;
+}
+
+window.savePackageEdit = async function(id) {
+    const title = document.getElementById('ePkgTitle').value.trim();
+    const price = document.getElementById('ePkgPrice').value.trim();
+    const includes = document.getElementById('ePkgIncludes').value.trim();
+    const projectLink = document.getElementById('ePkgLink').value.trim();
+    const btn = document.getElementById('savePkgBtn');
+
+    if (!title || !price || !includes) {
+        showToast("Заполните основные поля", "error");
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = 'Сохранение...';
+
+    try {
+        const response = await fetch(`/api/packages/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: adminPassword, title, price, includes, projectLink })
+        });
+
+        if (!response.ok) throw new Error("Ошибка сервера");
+
+        const updatedPkg = await response.json();
+        const index = currentPackages.findIndex(p => p._id === id);
+        if (index !== -1) currentPackages[index] = updatedPkg;
+
+        renderPackages();
+        openPackageDetails(id); 
+        showToast("Услуга обновлена!");
+    } catch (error) {
+        showToast("Ошибка при сохранении", "error");
+        btn.disabled = false;
+        btn.innerText = 'Сохранить изменения';
     }
 }
 
