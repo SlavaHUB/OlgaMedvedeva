@@ -1018,7 +1018,7 @@ body.admin-mode .admin-only {
     width: 100%;
     border-radius: var(--radius-sm);
     overflow: hidden;
-    background: #E5E7EB;
+    background: #f3f4f6; 
 }
 
 .case-main-image {
