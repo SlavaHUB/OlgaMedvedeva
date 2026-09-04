@@ -1023,7 +1023,8 @@ body.admin-mode .admin-only {
 
 .case-main-image {
     width: 100%;
-    height: auto;
+    max-height: 55vh; 
+    object-fit: contain;
     display: block;
     transition: opacity 0.25s ease-in-out;
 }
